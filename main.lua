@@ -119,13 +119,8 @@ function lovr.draw(pass)
     pass:plane(0, 0.01, 0, 20, 20, -math.pi / 2, 1, 0, 0, 'line', 100, 100)
     pass:setColor(0xD0A010)
     pass:capsule(player_pos, player_pos + vec3(0, 0.4, 0), 0.3)
-    local player_azimuth = math.atan2(player_vel.z, player_vel.x)
     cam.center = player_pos
     cam.nudge()
-
-
-
-    -- cam.nudge(d_azimuth * 0.005)
 end
 
 function lovr.keyreleased(key, scancode, repeating)

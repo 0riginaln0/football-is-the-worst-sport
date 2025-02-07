@@ -70,6 +70,12 @@ function lovr.update(dt)
     if lovr.system.isKeyDown('e') then
         cam.nudge(1 * dt)
     end
+    if lovr.system.isKeyDown('z') then
+        cam.nudge(0, -1 * dt, 0)
+    end
+    if lovr.system.isKeyDown('c') then
+        cam.nudge(0, 1 * dt, 0)
+    end
 
     if #player_vel > 0 then
         player_vel:normalize()
@@ -98,6 +104,11 @@ function lovr.draw(pass)
     pass:sphere(0, 0, 1, 0.2)
     pass:sphere(0, 0, -1, 0.2)
     pass:sphere(1, 0, 1, 0.2)
+    pass:sphere(4, 0, 0, 0.2)
+    pass:sphere(-4, 0, 0, 0.2)
+    pass:sphere(0, 0, 4, 0.2)
+    pass:sphere(0, 0, -4, 0.2)
+    pass:sphere(4, 0, 4, 0.2)
 
     pass:setColor(1, 1, 1)
     pass:text('Hold right\nmouse button\nto move\ntoward it', -2, 0.05, 0, 0.5, -math.pi / 2, 1, 0, 0)
@@ -109,12 +120,11 @@ function lovr.draw(pass)
     pass:setColor(0xD0A010)
     pass:capsule(player_pos, player_pos + vec3(0, 0.4, 0), 0.3)
     local player_azimuth = math.atan2(player_vel.z, player_vel.x)
-    pass:setColor(0x804000)
-    pass:cone(player_pos, 0.3, 0.6, -player_azimuth - math.pi / 2, 0, 1, 0)
     cam.center = player_pos
     cam.nudge()
-    d_azimuth = player_azimuth - cam.azimuth + math.pi
-    d_azimuth = (d_azimuth + math.pi) % (2 * math.pi) - math.pi -- wrap angle to -PI to PI range
+
+
+
     -- cam.nudge(d_azimuth * 0.005)
 end
 

@@ -65,10 +65,10 @@ function lovr.update(dt)
     end
 
     if lovr.system.isKeyDown('q') then
-        cam.nudge(1 * -0.001)
+        cam.nudge(-1 * dt)
     end
     if lovr.system.isKeyDown('e') then
-        cam.nudge(1 * 0.001)
+        cam.nudge(1 * dt)
     end
 
     if #player_vel > 0 then

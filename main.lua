@@ -43,6 +43,7 @@ local function mouseOnGround(ray)
     if dot == 0 then
         return vec3(0, 0, 0)
     end
+    ---@diagnostic disable-next-line: undefined-field
     local ray_length = (-ray.origin):dot(plane_direction) / dot
     local hit_spot = ray.origin + ray_direction * ray_length
     return hit_spot
@@ -61,6 +62,13 @@ function lovr.update(dt)
         player_vel.x = -1
     elseif lovr.system.isKeyDown('d', 'right') then
         player_vel.x = 1
+    end
+
+    if lovr.system.isKeyDown('q') then
+        cam.nudge(1 * -0.001)
+    end
+    if lovr.system.isKeyDown('e') then
+        cam.nudge(1 * 0.001)
     end
 
     if #player_vel > 0 then
@@ -124,6 +132,12 @@ function lovr.keyreleased(key, scancode, repeating)
     end
     if key == "f8" then
         do_snapshot = true
+    end
+end
+
+function lovr.keypressed(key)
+    if key == 'escape' then
+        lovr.event.quit()
     end
 end
 

@@ -80,8 +80,12 @@ function lovr.update(dt)
         cam.nudge(0, 1 * dt, 0)
     end
 
-    mouse_dir = cursor_pos - player_pos
-    player_pos:add(mouse_dir * dt)
+    if track_cursor then
+        mouse_dir = cursor_pos - player_pos
+        player_pos:add(mouse_dir * dt)
+    else
+        player_pos:add(player_vel:normalize() * 5 * dt)
+    end
 end
 
 ---@diagnostic disable-next-line: duplicate-set-field

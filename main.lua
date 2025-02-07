@@ -97,8 +97,6 @@ function lovr.draw(pass)
         local world_from_screen = getWorldFromScreen(pass)
         local ray = getRay(world_from_screen)
         local spot = mouseOnGround(ray)
-        print("spot:", spot)
-        -- track_cursor = false
         cursor_pos.x = spot.x
         cursor_pos.y = spot.y
         cursor_pos.z = spot.z

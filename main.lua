@@ -7,6 +7,10 @@ local player_pos = Vec3()
 local player_vel = Vec3(0, 0, 0)
 local mouse_just_pressed = false
 
+function lovr.load()
+    lovr.graphics.setBackgroundColor(0x87ceeb)
+end
+
 function lovr.mousepressed(x, y, button)
     mouse_just_pressed = true
 end
@@ -46,6 +50,7 @@ local function mouseOnGround(ray)
     ---@diagnostic disable-next-line: undefined-field
     local ray_length = (-ray.origin):dot(plane_direction) / dot
     local hit_spot = ray.origin + ray_direction * ray_length
+    hit_spot.y = 0.0
     return hit_spot
 end
 
@@ -86,6 +91,7 @@ end
 
 ---@diagnostic disable-next-line: duplicate-set-field
 function lovr.draw(pass)
+    pass:push()
     -- player control
     local dt = lovr.timer.getDelta()
     if mouse_just_pressed then
@@ -121,6 +127,7 @@ function lovr.draw(pass)
     pass:capsule(player_pos, player_pos + vec3(0, 0.4, 0), 0.3)
     cam.center = player_pos
     cam.nudge()
+    pass:pop()
 end
 
 function lovr.keyreleased(key, scancode, repeating)

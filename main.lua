@@ -1,134 +1,89 @@
-lovr.window = require 'lovr-window'
-lovr.mouse = require 'lovr-mouse'
--- local cam = require 'cam'
+local cam = require 'cam'
 
-function lovr.load()
-    lovr.graphics.setBackgroundColor(0x181818)
-    lovr.mouse.setRelativeMode(false)
+local player_pos = Vec3()
+local player_vel = Vec3(0, 0, 0)
+local mouse_just_pressed = false
 
-    camera = {
-        transform = lovr.math.newMat4(),
-        position = lovr.math.newVec3(0, 10, 0),
-        movespeed = 10,
-        pitch = 0,
-        yaw = 0
-    }
+function lovr.mousepressed(x, y, button)
+    mouse_just_pressed = true
 end
 
-local free_cam = true
-local do_snapshot = false
-
-local function debug(...)
-    if do_snapshot then
-        print(...)
-    end
+-- next three functions convert mouse coordinate from screen to the 3D position on the ground plane
+local function getWorldFromScreen(pass)
+    local w, h = pass:getDimensions()
+    local clip_from_screen = mat4(-1, -1, 0):scale(2 / w, 2 / h, 1)
+    local view_pose = mat4(pass:getViewPose(1))
+    local view_proj = pass:getProjection(1, mat4())
+    return view_pose:mul(view_proj:invert()):mul(clip_from_screen)
 end
 
-function lovr.update(dt)
-    local velocity = vec4()
 
-    -- Step 1: Get the mouse position
-    local mouseX, mouseY = lovr.mouse.getPosition()
-    debug("MouseX", mouseX, "MouseY", mouseY)
-
-    -- Step 2: Get the window dimensions
-    local width, height = lovr.system.getWindowDimensions()
-    debug("width", width, "height", height)
-
-    -- Step 3: Calculate normalized device coordinates (NDC)
-    local ndcX = (mouseX / width) * 2 - 1
-    local ndcY = 1 - (mouseY / height) * 2 -- Invert Y for NDC
-    debug("X NDC", ndcX, "Y NDC", ndcY)
-
-    debug("Camera pos:", camera.position)
-
-    if lovr.system.isKeyDown('w', 'up') then
-        velocity.z = -1
-    elseif lovr.system.isKeyDown('s', 'down') then
-        velocity.z = 1
-    end
-
-    if lovr.system.isKeyDown('a', 'left') then
-        velocity.x = -1
-    elseif lovr.system.isKeyDown('d', 'right') then
-        velocity.x = 1
-    end
-
-    if lovr.system.isKeyDown('q') then
-        camera.yaw = camera.yaw + 1 * .002
-    end
-    if lovr.system.isKeyDown('e') then
-        camera.yaw = camera.yaw - 1 * .002
-    end
-
-    if #velocity > 0 then
-        velocity:normalize()
-        velocity:mul(camera.movespeed * dt)
-        camera.position:add(camera.transform:mul(velocity).xyz)
-    end
-
-    camera.transform:identity()
-    camera.transform:translate(0, 0, 0)
-    camera.transform:translate(camera.position)
-    camera.transform:rotate(camera.yaw, 0, 1, 0)
-    camera.transform:rotate(camera.pitch, 1, 0, 0)
-    do_snapshot = false
+local function getRay(world_from_screen, distance)
+    local NEAR_PLANE = 0.01
+    distance = distance or 1e3
+    local ray = {}
+    local x, y = lovr.system.getMousePosition()
+    ray.origin = vec3(world_from_screen:mul(x, y, NEAR_PLANE / NEAR_PLANE))
+    ray.target = vec3(world_from_screen:mul(x, y, NEAR_PLANE / distance))
+    return ray
 end
 
-local plane_width, plane_height = 100, 100
+
+local function mouseOnGround(ray)
+    if ray.origin:distance(ray.target) < 1e-2 then
+        return vec3(0, 0, 0)
+    end
+    local ray_direction = (ray.target - ray.origin):normalize()
+    -- intersect the ray onto ground plane
+    local plane_direction = vec3(0, 1, 0)
+    local dot = ray_direction:dot(plane_direction)
+    if dot == 0 then
+        return vec3(0, 0, 0)
+    end
+    local ray_length = (-ray.origin):dot(plane_direction) / dot
+    local hit_spot = ray.origin + ray_direction * ray_length
+    return hit_spot
+end
+
+
 
 function lovr.draw(pass)
-    pass:push()
-    pass:setViewPose(1, camera.transform)
-    pass:setColor(0xff0000)
-    pass:cube(0, 0.5, 0, 1, lovr.timer.getTime())
-    pass:setColor(0xffffff)
-    pass:plane(0, 0, 0, plane_width, plane_height, math.pi / 2, 1, 0, 0)
-    pass:pop()
+    -- player control
+    local dt = lovr.timer.getDelta()
+    if mouse_just_pressed then
+        local world_from_screen = getWorldFromScreen(pass)
+        local ray = getRay(world_from_screen)
+        local spot = mouseOnGround(ray)
+        print("spot:", spot)
+        player_pos:lerp(spot, 0.9)
+        mouse_just_pressed = false
+    end
+
+
+    pass:setColor(0x40a0ff)
+    pass:sphere(0, 0, 0, 0.2)
+    pass:sphere(1, 0, 0, 0.2)
+    pass:sphere(-1, 0, 0, 0.2)
+    pass:sphere(0, 0, 1, 0.2)
+    pass:sphere(0, 0, -1, 0.2)
+    pass:sphere(1, 0, 1, 0.2)
+
+    pass:setColor(1, 1, 1)
+    pass:text('Hold right\nmouse button\nto move\ntoward it', -2, 0.05, 0, 0.5, -math.pi / 2, 1, 0, 0)
+
+    pass:setColor(0x101010)
+    pass:plane(0, 0, 0, 20, 20, -math.pi / 2, 1, 0, 0)
+    pass:setColor(0x505050)
+    pass:plane(0, 0.01, 0, 20, 20, -math.pi / 2, 1, 0, 0, 'line', 100, 100)
+    pass:setColor(0xD0A010)
+    pass:capsule(player_pos, player_pos + vec3(0, 0.4, 0), 0.3)
+    local player_azimuth = math.atan2(player_vel.z, player_vel.x)
+    pass:setColor(0x804000)
+    pass:cone(player_pos, 0.3, 0.6, -player_azimuth - math.pi / 2, 0, 1, 0)
+    cam.center:lerp(player_pos, 0.1)
+    d_azimuth = player_azimuth - cam.azimuth + math.pi
+    d_azimuth = (d_azimuth + math.pi) % (2 * math.pi) - math.pi -- wrap angle to -PI to PI range
+    cam.nudge(d_azimuth * 0.005)
 end
 
-function lovr.mousemoved(x, y, dx, dy)
-    if free_cam then
-        camera.pitch = camera.pitch - dy * .004
-        camera.yaw = camera.yaw - dx * .004
-    end
-end
-
-function lovr.keypressed(key)
-    if key == 'escape' then
-        lovr.event.quit()
-    end
-end
-
-function lovr.keyreleased(key, scancode, repeating)
-    if key == "f" then
-        free_cam = not free_cam
-    end
-    if key == "f11" then
-        print("f11")
-        local fullscreen, fullscreentype = lovr.window.getFullscreen()
-        print("Fullscreen? ", fullscreen)
-        lovr.window.setFullscreen(not fullscreen, fullscreentype or "exclusive")
-    end
-    if key == "f10" then
-        print("f10 -----------------")
-        print("Mouse mode: ", lovr.mouse.getRelativeMode())
-        lovr.mouse.setRelativeMode(false)
-        print("f10 -----setfalse----")
-        print("Mouse mode: ", lovr.mouse.getRelativeMode())
-    end
-    if key == "f9" then
-        print("f9  =================")
-        print("Mouse mode: ", lovr.mouse.getRelativeMode())
-        lovr.mouse.setRelativeMode(true)
-        print("f9  =====settrue=====")
-        print("Mouse mode: ", lovr.mouse.getRelativeMode())
-    end
-    if key == "f8" then
-        do_snapshot = true
-    end
-end
-
--- -----------------------------------------------------------------
-
--- cam.integrate()
+cam.integrate()

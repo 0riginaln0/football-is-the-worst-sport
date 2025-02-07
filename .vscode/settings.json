@@ -1,0 +1,10 @@
+{
+    "Lua.diagnostics.globals": [
+        "lovr",
+        "vec4",
+        "vec3",
+        "mat4",
+        "Vec3",
+        "Mat4",
+    ]
+}

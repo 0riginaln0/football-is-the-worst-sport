@@ -5,16 +5,12 @@ local cam = require 'cam'
 
 local player_pos = Vec3()
 local player_vel = Vec3(0, 0, 0)
-local mouse_just_pressed = false
+local track_cursor = false
 local cursor_pos = Vec3(0, 0, 0)
 local mouse_dir = Vec3(0, 0, 0)
 
 function lovr.load()
     lovr.graphics.setBackgroundColor(0x87ceeb)
-end
-
-function lovr.mousepressed(x, y, button)
-    mouse_just_pressed = true
 end
 
 -- next three functions convert mouse coordinate from screen to the 3D position on the ground plane
@@ -85,26 +81,20 @@ function lovr.update(dt)
     end
 
     mouse_dir = cursor_pos - player_pos
-    player_vel:add(mouse_dir * dt)
-
-    if #mouse_dir > 0 then
-        mouse_dir:normalize():mul(15)
-    end
-    player_vel:add(mouse_dir * dt)
-    player_pos:add(player_vel * 100 * dt)
+    player_pos:add(mouse_dir * dt)
 end
 
 ---@diagnostic disable-next-line: duplicate-set-field
 function lovr.draw(pass)
-    pass:push()
     -- player control
     local dt = lovr.timer.getDelta()
-    if mouse_just_pressed then
+
+    if track_cursor then
         local world_from_screen = getWorldFromScreen(pass)
         local ray = getRay(world_from_screen)
         local spot = mouseOnGround(ray)
         print("spot:", spot)
-        mouse_just_pressed = false
+        -- track_cursor = false
         cursor_pos.x = spot.x
         cursor_pos.y = spot.y
         cursor_pos.z = spot.z
@@ -135,7 +125,6 @@ function lovr.draw(pass)
     pass:capsule(player_pos, player_pos + vec3(0, 0.4, 0), 0.3)
     cam.center = player_pos
     cam.nudge()
-    pass:pop()
 end
 
 function lovr.keyreleased(key, scancode, repeating)
@@ -152,6 +141,9 @@ function lovr.keyreleased(key, scancode, repeating)
     end
     if key == "f8" then
         do_snapshot = true
+    end
+    if key == "g" then
+        track_cursor = not track_cursor
     end
 end
 

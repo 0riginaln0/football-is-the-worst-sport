@@ -1,6 +1,6 @@
 https://lovr.org/docs/Callbacks_and_Modules
 
-Запустить:
+Run:
 
 ```shell
 lovrc .

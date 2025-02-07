@@ -47,6 +47,7 @@ end
 
 
 
+---@diagnostic disable-next-line: duplicate-set-field
 function lovr.draw(pass)
     -- player control
     local dt = lovr.timer.getDelta()
@@ -55,7 +56,6 @@ function lovr.draw(pass)
         local ray = getRay(world_from_screen)
         local spot = mouseOnGround(ray)
         print("spot:", spot)
-        player_pos:lerp(spot, 0.9)
         mouse_just_pressed = false
     end
 
@@ -83,7 +83,7 @@ function lovr.draw(pass)
     cam.center:lerp(player_pos, 0.1)
     d_azimuth = player_azimuth - cam.azimuth + math.pi
     d_azimuth = (d_azimuth + math.pi) % (2 * math.pi) - math.pi -- wrap angle to -PI to PI range
-    cam.nudge(d_azimuth * 0.005)
+    -- cam.nudge(d_azimuth * 0.005)
 end
 
 cam.integrate()

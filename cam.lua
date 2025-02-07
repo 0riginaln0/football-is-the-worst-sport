@@ -95,6 +95,7 @@ function m.integrate()
   lovr.mousemoved = wrap('mousemoved')
   lovr.wheelmoved = wrap('wheelmoved')
   lovr.resize = wrap('resize')
+  ---@diagnostic disable-next-line: duplicate-set-field
   lovr.draw = function(pass)
     m.setCamera(pass)
     existing_cb.draw(pass)

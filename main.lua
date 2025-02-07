@@ -1,3 +1,6 @@
+lovr.window = require 'lovr-window'
+lovr.mouse = require 'lovr-mouse'
+
 local cam = require 'cam'
 
 local player_pos = Vec3()
@@ -22,7 +25,7 @@ local function getRay(world_from_screen, distance)
     local NEAR_PLANE = 0.01
     distance = distance or 1e3
     local ray = {}
-    local x, y = lovr.system.getMousePosition()
+    local x, y = lovr.mouse.getPosition()
     ray.origin = vec3(world_from_screen:mul(x, y, NEAR_PLANE / NEAR_PLANE))
     ray.target = vec3(world_from_screen:mul(x, y, NEAR_PLANE / distance))
     return ray
@@ -46,6 +49,26 @@ local function mouseOnGround(ray)
 end
 
 
+function lovr.update(dt)
+    player_vel = Vec3(0, 0, 0)
+    if lovr.system.isKeyDown('w', 'up') then
+        player_vel.z = -1
+    elseif lovr.system.isKeyDown('s', 'down') then
+        player_vel.z = 1
+    end
+
+    if lovr.system.isKeyDown('a', 'left') then
+        player_vel.x = -1
+    elseif lovr.system.isKeyDown('d', 'right') then
+        player_vel.x = 1
+    end
+
+    if #player_vel > 0 then
+        player_vel:normalize()
+        player_vel:mul(10 * dt)
+        player_pos:add(player_vel)
+    end
+end
 
 ---@diagnostic disable-next-line: duplicate-set-field
 function lovr.draw(pass)
@@ -80,10 +103,28 @@ function lovr.draw(pass)
     local player_azimuth = math.atan2(player_vel.z, player_vel.x)
     pass:setColor(0x804000)
     pass:cone(player_pos, 0.3, 0.6, -player_azimuth - math.pi / 2, 0, 1, 0)
-    cam.center:lerp(player_pos, 0.1)
+    cam.center = player_pos
+    cam.nudge()
     d_azimuth = player_azimuth - cam.azimuth + math.pi
     d_azimuth = (d_azimuth + math.pi) % (2 * math.pi) - math.pi -- wrap angle to -PI to PI range
     -- cam.nudge(d_azimuth * 0.005)
+end
+
+function lovr.keyreleased(key, scancode, repeating)
+    if key == "f11" then
+        print("f11")
+        local fullscreen, fullscreentype = lovr.window.getFullscreen()
+        print("Fullscreen? ", fullscreen)
+        lovr.window.setFullscreen(not fullscreen, fullscreentype or "exclusive")
+    end
+    if key == "f10" then
+        print("f10 -----------------")
+        lovr.mouse.setRelativeMode(not lovr.mouse.getRelativeMode())
+        print("Mouse mode: ", lovr.mouse.getRelativeMode())
+    end
+    if key == "f8" then
+        do_snapshot = true
+    end
 end
 
 cam.integrate()

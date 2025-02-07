@@ -6,6 +6,8 @@ local cam = require 'cam'
 local player_pos = Vec3()
 local player_vel = Vec3(0, 0, 0)
 local mouse_just_pressed = false
+local cursor_pos = Vec3(0, 0, 0)
+local mouse_dir = Vec3(0, 0, 0)
 
 function lovr.load()
     lovr.graphics.setBackgroundColor(0x87ceeb)
@@ -82,11 +84,14 @@ function lovr.update(dt)
         cam.nudge(0, 1 * dt, 0)
     end
 
-    if #player_vel > 0 then
-        player_vel:normalize()
-        player_vel:mul(10 * dt)
-        player_pos:add(player_vel)
+    mouse_dir = cursor_pos - player_pos
+    player_vel:add(mouse_dir * dt)
+
+    if #mouse_dir > 0 then
+        mouse_dir:normalize():mul(15)
     end
+    player_vel:add(mouse_dir * dt)
+    player_pos:add(player_vel * 100 * dt)
 end
 
 ---@diagnostic disable-next-line: duplicate-set-field
@@ -100,6 +105,9 @@ function lovr.draw(pass)
         local spot = mouseOnGround(ray)
         print("spot:", spot)
         mouse_just_pressed = false
+        cursor_pos.x = spot.x
+        cursor_pos.y = spot.y
+        cursor_pos.z = spot.z
     end
 
 

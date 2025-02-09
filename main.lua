@@ -70,7 +70,7 @@ function lovr.load()
     ball:setRestitution(0.7)
     ball:setAngularDamping(0.009)
     ball:setLinearDamping(0.001)
-    ball:setFriction(1)
+    ball:setFriction(0.7)
 end
 
 ------------
@@ -88,24 +88,24 @@ function lovr.update(dt)
         end
 
         if w_just_pressed then
-            ball:applyTorque(0.5, 0, 0)
+            ball:applyTorque(1, 0, 0)
             w_just_pressed = false
         end
         if a_just_pressed then
-            ball:applyTorque(0, 0, -0.5)
+            ball:applyTorque(0, 0, -1)
             a_just_pressed = false
         end
         if s_just_pressed then
-            ball:applyTorque(-0.5, 0, 0)
+            ball:applyTorque(-1, 0, 0)
             s_just_pressed = false
         end
         if d_just_pressed then
-            ball:applyTorque(0, 0, 0.5)
+            ball:applyTorque(0, 0, 1)
             d_just_pressed = false
         end
         if x_just_pressed then
-            ball:applyForce(0, 40, -90)
-            ball:applyTorque(0, -2, 0)
+            ball:applyForce(0, 40, -100)
+            ball:applyTorque(0, 3, 0)
             x_just_pressed = false
         end
         local magnusX, magnusY, magnusZ = calculateMagnusForce()

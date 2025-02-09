@@ -7,6 +7,7 @@ lovr.window = require 'lovr-window'
 lovr.mouse = require 'lovr-mouse'
 
 local cam = require 'cam'
+cam.zoom_speed = 10
 local phywire = require 'phywire'
 local utils = require 'utils'
 
@@ -28,7 +29,30 @@ local accumulator = 0          -- accumulator of time to simulate
 local ball
 local ball_radius = 0.25
 local init_ball_position = vec3(-1, 10, -1)
+local k = 0.001 -- Adjust this constant based on the desired curve effect
+
+function calculateMagnusForce()
+    local angular_vx, angular_vy, angular_vz = ball:getAngularVelocity() -- Get the ball's spin (ω)
+    local linear_vx, linear_vy, linear_vz = ball:getLinearVelocity()     -- Get the ball's velocity (v)
+
+    -- Calculate the cross product ω × v
+    local magnusX = angular_vy * linear_vz - angular_vz * linear_vy
+    local magnusY = angular_vz * linear_vx - angular_vx * linear_vz
+    local magnusZ = angular_vx * linear_vy - angular_vy * linear_vx
+
+    -- Scale the Magnus force by the constant k
+    return magnusX * k, magnusY * k, magnusZ * k
+end
+
+-----------
+-- Input --
+-----------
 local space_just_pressed = false
+local w_just_pressed = false
+local a_just_pressed = false
+local s_just_pressed = false
+local d_just_pressed = false
+local x_just_pressed = false
 
 
 ----------
@@ -39,11 +63,14 @@ function lovr.load()
     world = lovr.physics.newWorld(0, -9.81, 0, false)
 
     -- ground plane
-    local box = world:newBoxCollider(vec3(0, -2, 0), vec3(120, 4, 90))
+    local box = world:newBoxCollider(vec3(0, -2, 0), vec3(90, 4, 120))
     box:setKinematic(true)
     -- ball
     ball = world:newSphereCollider(init_ball_position, ball_radius)
     ball:setRestitution(0.7)
+    ball:setAngularDamping(0.009)
+    ball:setLinearDamping(0.001)
+    ball:setFriction(1)
 end
 
 ------------
@@ -54,25 +81,40 @@ function lovr.update(dt)
     while accumulator >= const_dt do
         world:update(const_dt)
         accumulator = accumulator - const_dt
+
         if space_just_pressed then
             ball:applyForce(0, 19, 0)
             space_just_pressed = false
         end
+
+        if w_just_pressed then
+            ball:applyTorque(0.5, 0, 0)
+            w_just_pressed = false
+        end
+        if a_just_pressed then
+            ball:applyTorque(0, 0, -0.5)
+            a_just_pressed = false
+        end
+        if s_just_pressed then
+            ball:applyTorque(-0.5, 0, 0)
+            s_just_pressed = false
+        end
+        if d_just_pressed then
+            ball:applyTorque(0, 0, 0.5)
+            d_just_pressed = false
+        end
+        if x_just_pressed then
+            ball:applyForce(0, 32, -70)
+            ball:applyTorque(0, -3, 0)
+            x_just_pressed = false
+        end
+        local magnusX, magnusY, magnusZ = calculateMagnusForce()
+        ball:applyForce(magnusX, magnusY, magnusZ) -- Apply the Magnus force
     end
 
     player_vel = Vec3(0, 0, 0)
-    if lovr.system.isKeyDown('w', 'up') then
-        player_vel.z = -1
-    elseif lovr.system.isKeyDown('s', 'down') then
-        player_vel.z = 1
-    end
 
-    if lovr.system.isKeyDown('a', 'left') then
-        player_vel.x = -1
-    elseif lovr.system.isKeyDown('d', 'right') then
-        player_vel.x = 1
-    end
-
+    -- Camera controls
     if lovr.system.isKeyDown('q') then
         cam.nudge(-1 * dt)
     end
@@ -86,10 +128,22 @@ function lovr.update(dt)
         cam.nudge(0, 1 * dt, 0)
     end
 
+    -- Player movement
     if track_cursor then
         mouse_dir = cursor_pos - player_pos
         player_pos:add(mouse_dir * dt)
     else
+        if lovr.system.isKeyDown('w', 'up') then
+            player_vel.z = -1
+        elseif lovr.system.isKeyDown('s', 'down') then
+            player_vel.z = 1
+        end
+
+        if lovr.system.isKeyDown('a', 'left') then
+            player_vel.x = -1
+        elseif lovr.system.isKeyDown('d', 'right') then
+            player_vel.x = 1
+        end
         player_pos:add(player_vel:normalize() * 5 * dt)
     end
 end
@@ -98,6 +152,7 @@ end
 -- Draw --
 ----------
 function lovr.draw(pass)
+    -- print(ball:getAngularVelocity())
     phywire.draw(pass, world)
     if track_cursor then
         local spot = utils.cursorToWorldPoint(pass)
@@ -115,7 +170,7 @@ function lovr.draw(pass)
             local sx, sy, sz = shape:getDimensions()
             pass:box(x, y, z, sx, sy, sz, angle, ax, ay, az)
         elseif shapeType == 'sphere' then
-            pass:setColor(0.4, 0, 0)
+            pass:setColor(1, 1, 1)
             pass:sphere(x, y, z, shape:getRadius())
         end
     end
@@ -163,6 +218,26 @@ function lovr.keypressed(key)
     if key == "space" then
         print("space pressed")
         space_just_pressed = true
+    end
+    if key == "w" then
+        print("w pressed")
+        w_just_pressed = true
+    end
+    if key == "a" then
+        print("a pressed")
+        a_just_pressed = true
+    end
+    if key == "s" then
+        print("s pressed")
+        s_just_pressed = true
+    end
+    if key == "d" then
+        print("d pressed")
+        d_just_pressed = true
+    end
+    if key == "x" then
+        print("x pressed")
+        x_just_pressed = true
     end
 end
 

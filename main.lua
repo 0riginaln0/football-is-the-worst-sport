@@ -1,9 +1,18 @@
+-------------
+-- Imports --
+-------------
+
+
 lovr.window = require 'lovr-window'
 lovr.mouse = require 'lovr-mouse'
 
 local cam = require 'cam'
 local phywire = require 'phywire'
 local utils = require 'utils'
+
+---------------------------
+-- Constants & Variables --
+---------------------------
 
 local player_pos = Vec3()
 local player_vel = Vec3(0, 0, 0)
@@ -16,24 +25,39 @@ local world
 local const_dt = 0.01666666666 -- my constant dt
 local accumulator = 0          -- accumulator of time to simulate
 
+local ball
+local ball_radius = 0.25
+local init_ball_position = vec3(-1, 10, -1)
+local space_just_pressed = false
 
+
+----------
+-- Load --
+----------
 function lovr.load()
     lovr.graphics.setBackgroundColor(0x87ceeb)
     world = lovr.physics.newWorld(0, -9.81, 0, false)
 
     -- ground plane
-    local box = world:newBoxCollider(vec3(0, -2, 0), vec3(20, 4, 20))
+    local box = world:newBoxCollider(vec3(0, -2, 0), vec3(120, 4, 90))
     box:setKinematic(true)
     -- ball
-    local ballPosition = vec3(-1, 10, -1)
-    local ball = world:newSphereCollider(ballPosition, 0.12):setRestitution(0.7)
+    ball = world:newSphereCollider(init_ball_position, ball_radius)
+    ball:setRestitution(0.7)
 end
 
+------------
+-- Update --
+------------
 function lovr.update(dt)
     accumulator = accumulator + dt
     while accumulator >= const_dt do
         world:update(const_dt)
         accumulator = accumulator - const_dt
+        if space_just_pressed then
+            ball:applyForce(0, 19, 0)
+            space_just_pressed = false
+        end
     end
 
     player_vel = Vec3(0, 0, 0)
@@ -70,7 +94,9 @@ function lovr.update(dt)
     end
 end
 
----@diagnostic disable-next-line: duplicate-set-field
+----------
+-- Draw --
+----------
 function lovr.draw(pass)
     phywire.draw(pass, world)
     if track_cursor then
@@ -99,28 +125,17 @@ function lovr.draw(pass)
     pass:sphere(0, 0, 0, 0.2)
     pass:sphere(1, 0, 0, 0.2)
     pass:sphere(-1, 0, 0, 0.2)
-    pass:sphere(0, 0, 1, 0.2)
-    pass:sphere(0, 0, -1, 0.2)
-    pass:sphere(1, 0, 1, 0.2)
-    pass:sphere(4, 0, 0, 0.2)
-    pass:sphere(-4, 0, 0, 0.2)
-    pass:sphere(0, 0, 4, 0.2)
-    pass:sphere(0, 0, -4, 0.2)
-    pass:sphere(4, 0, 4, 0.2)
 
     pass:setColor(1, 1, 1)
-    pass:text('Hold right\nmouse button\nto move\ntoward it', -2, 0.05, 0, 0.5, -math.pi / 2, 1, 0, 0)
-
-    -- pass:setColor(0x101010)
-    -- pass:plane(0, 0, 0, 20, 20, -math.pi / 2, 1, 0, 0)
-    -- pass:setColor(0x505050)
-    -- pass:plane(0, 0.01, 0, 20, 20, -math.pi / 2, 1, 0, 0, 'line', 100, 100)
     pass:setColor(0xD0A010)
-    pass:capsule(player_pos, player_pos + vec3(0, 0.4, 0), 0.3)
+    pass:capsule(player_pos, player_pos + vec3(0, 1.4, 0), 0.4)
     cam.center = player_pos
     cam.nudge()
 end
 
+---------------------
+-- Other Callbacks --
+---------------------
 function lovr.keyreleased(key, scancode, repeating)
     if key == "f11" then
         print("f11")
@@ -144,6 +159,10 @@ end
 function lovr.keypressed(key)
     if key == 'escape' then
         lovr.event.quit()
+    end
+    if key == "space" then
+        print("space pressed")
+        space_just_pressed = true
     end
 end
 

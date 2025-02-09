@@ -104,8 +104,8 @@ function lovr.update(dt)
             d_just_pressed = false
         end
         if x_just_pressed then
-            ball:applyForce(0, 32, -70)
-            ball:applyTorque(0, -3, 0)
+            ball:applyForce(0, 40, -90)
+            ball:applyTorque(0, -2, 0)
             x_just_pressed = false
         end
         local magnusX, magnusY, magnusZ = calculateMagnusForce()

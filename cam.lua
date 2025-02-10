@@ -1,6 +1,6 @@
 local m = {}
 
-m.fov = math.pi / 2
+m.fov = math.pi / 2 -- math.pi / 4 if "isometric-like" look is needed
 m.near_plane = 0.01
 
 m.upvector = Vec3(0, 1, 0)

@@ -23,7 +23,7 @@ Live-reload for the LOVR:
 
 Misc:
 
-https://www.dimensions.com/element/soccer-ball-football-size-5
+https://us.select-sport.com/pages/size-chart-soccer-balls
 
 
 https://www.blockbench.net/quickstart

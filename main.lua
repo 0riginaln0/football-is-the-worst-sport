@@ -31,7 +31,7 @@ local ball_radius = 0.25
 local init_ball_position = vec3(-1, 10, -1)
 local k = 0.001 -- Adjust this constant based on the desired curve effect
 
-function calculateMagnusForce()
+local function calculateMagnusForce()
     local angular_vx, angular_vy, angular_vz = ball:getAngularVelocity() -- Get the ball's spin (ω)
     local linear_vx, linear_vy, linear_vz = ball:getLinearVelocity()     -- Get the ball's velocity (v)
 
@@ -44,6 +44,11 @@ function calculateMagnusForce()
     return magnusX * k, magnusY * k, magnusZ * k
 end
 
+local function resetBallVelocity(ball)
+    ball:setAngularVelocity(0, 0, 0)
+    ball:setLinearVelocity(0, 0, 0)
+end
+
 -----------
 -- Input --
 -----------
@@ -53,6 +58,7 @@ local a_just_pressed = false
 local s_just_pressed = false
 local d_just_pressed = false
 local x_just_pressed = false
+local v_just_pressed = false
 
 
 ----------
@@ -61,6 +67,8 @@ local x_just_pressed = false
 function lovr.load()
     lovr.graphics.setBackgroundColor(0x87ceeb)
     world = lovr.physics.newWorld(0, -9.81, 0, false)
+    world:setAngularDamping(0.009)
+    world:setLinearDamping(0.001)
 
     -- ground plane
     local box = world:newBoxCollider(vec3(0, -2, 0), vec3(90, 4, 120))
@@ -68,9 +76,8 @@ function lovr.load()
     -- ball
     ball = world:newSphereCollider(init_ball_position, ball_radius)
     ball:setRestitution(0.7)
-    ball:setAngularDamping(0.009)
-    ball:setLinearDamping(0.001)
     ball:setFriction(0.7)
+    ball:setMass(0.44)
 end
 
 ------------
@@ -104,9 +111,16 @@ function lovr.update(dt)
             d_just_pressed = false
         end
         if x_just_pressed then
+            resetBallVelocity(ball)
             ball:applyForce(0, 40, -100)
             ball:applyTorque(0, 3, 0)
             x_just_pressed = false
+        end
+        if v_just_pressed then
+            resetBallVelocity(ball)
+            ball:applyForce(0, 40, 100)
+            ball:applyTorque(0, 3, 0)
+            v_just_pressed = false
         end
         local magnusX, magnusY, magnusZ = calculateMagnusForce()
         ball:applyForce(magnusX, magnusY, magnusZ) -- Apply the Magnus force
@@ -238,6 +252,10 @@ function lovr.keypressed(key)
     if key == "x" then
         print("x pressed")
         x_just_pressed = true
+    end
+    if key == "v" then
+        print("v pressed")
+        v_just_pressed = true
     end
 end
 

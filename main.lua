@@ -28,10 +28,10 @@ local accumulator = 0          -- accumulator of time to simulate
 
 local ball
 local ball_radius = 0.25
-local init_ball_position = vec3(-1, 1, -1)
+local init_ball_position = vec3(-1, 10, -1)
 local k = 0.001 -- Adjust this constant based on the desired curve effect
 
-local function calculateMagnusForce()
+local function calculateMagnusForce(ball)
     local angular_vx, angular_vy, angular_vz = ball:getAngularVelocity() -- Get the ball's spin (ω)
     local linear_vx, linear_vy, linear_vz = ball:getLinearVelocity()     -- Get the ball's velocity (v)
 
@@ -122,7 +122,7 @@ function lovr.update(dt)
             ball:applyTorque(0, 200, 0)
             v_just_pressed = false
         end
-        local magnusX, magnusY, magnusZ = calculateMagnusForce()
+        local magnusX, magnusY, magnusZ = calculateMagnusForce(ball)
         ball:applyForce(magnusX, magnusY, magnusZ) -- Apply the Magnus force
     end
 

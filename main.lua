@@ -6,6 +6,14 @@ lovr.mouse = require 'utils.lovr-mouse'
 
 local cam = require 'utils.cam'
 cam.zoom_speed = 10
+
+local function incrementFov(cam, inc)
+    cam.fov = cam.fov + inc
+    cam.resize(lovr.system.getWindowDimensions())
+    print("New FOV:", cam.fov * 57.2958)
+end
+
+
 local phywire = require 'utils.phywire'
 local math = require 'utils.math'
 
@@ -57,6 +65,7 @@ local s_just_pressed = false
 local d_just_pressed = false
 local x_just_pressed = false
 local v_just_pressed = false
+
 
 
 ----------
@@ -139,6 +148,12 @@ function lovr.update(dt)
     if lovr.system.isKeyDown('c') then
         cam.nudge(0, 1 * dt, 0)
     end
+    if lovr.system.isKeyDown('r') then
+        incrementFov(cam, 0.001)
+    end
+    if lovr.system.isKeyDown('f') then
+        incrementFov(cam, -0.001)
+    end
 
     -- Player movement
     if track_cursor then
@@ -164,7 +179,8 @@ end
 -- Draw --
 ----------
 function lovr.draw(pass)
-    -- print(ball:getAngularVelocity())
+    cam.setCamera(pass)
+
     phywire.draw(pass, world)
     if track_cursor then
         local spot = math.cursorToWorldPoint(pass)
@@ -203,6 +219,15 @@ end
 ---------------------
 -- Other Callbacks --
 ---------------------
+
+function lovr.resize(width, height)
+    cam.resize(width, height)
+end
+
+function lovr.wheelmoved(dx, dy)
+    cam.wheelmoved(dx, dy)
+end
+
 function lovr.keyreleased(key, scancode, repeating)
     if key == "f11" then
         print("f11")
@@ -253,5 +278,3 @@ function lovr.keypressed(key)
         v_just_pressed = true
     end
 end
-
-cam.integrate()

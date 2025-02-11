@@ -88,7 +88,7 @@ function lovr.update(dt)
         accumulator = accumulator - const_dt
 
         if space_just_pressed then
-            ball:applyForce(0, 19, 0)
+            ball:applyForce(0, 77, 0)
             space_just_pressed = false
         end
 

@@ -6,6 +6,8 @@ lovr.mouse = require 'utils.lovr-mouse'
 
 local cam = require 'utils.cam'
 cam.zoom_speed = 10
+cam.polar_upper = 30 * 0.0174533
+cam.polar_lower = math.pi / 2 - cam.polar_upper
 
 local function incrementFov(cam, inc)
     cam.fov = cam.fov + inc

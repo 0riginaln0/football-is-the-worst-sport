@@ -1,8 +1,6 @@
 -------------
 -- Imports --
 -------------
-
-
 lovr.window = require 'lovr-window'
 lovr.mouse = require 'lovr-mouse'
 
@@ -11,16 +9,15 @@ cam.zoom_speed = 10
 local phywire = require 'phywire'
 local utils = require 'utils'
 
+
 ---------------------------
 -- Constants & Variables --
 ---------------------------
-
 local player_pos = Vec3()
 local player_vel = Vec3(0, 0, 0)
 local track_cursor = false
 local cursor_pos = Vec3(0, 0, 0)
 local mouse_dir = Vec3(0, 0, 0)
-
 
 local world
 local const_dt = 0.01666666666 -- my constant dt
@@ -48,6 +45,7 @@ local function resetBallVelocity(ball)
     ball:setAngularVelocity(0, 0, 0)
     ball:setLinearVelocity(0, 0, 0)
 end
+
 
 -----------
 -- Input --
@@ -79,6 +77,7 @@ function lovr.load()
     ball:setFriction(0.7)
     ball:setMass(0.44)
 end
+
 
 ------------
 -- Update --
@@ -162,6 +161,7 @@ function lovr.update(dt)
     end
 end
 
+
 ----------
 -- Draw --
 ----------
@@ -201,6 +201,7 @@ function lovr.draw(pass)
     cam.center = player_pos
     cam.nudge()
 end
+
 
 ---------------------
 -- Other Callbacks --

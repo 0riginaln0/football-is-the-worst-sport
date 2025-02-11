@@ -1,3 +1,4 @@
+---@diagnostic disable: lowercase-global, duplicate-set-field
 local target = require("z_lodrSupport.target")
 local timer = require("lovr.timer")
 
@@ -19,7 +20,7 @@ if target then
 	local hasConf = hasProject and lovr.filesystem.isFile("_lodrTempConfPath/conf.lua")
 	lovr.filesystem.unmount(target) -- Unload temp directory
 
-	local function unloadConf() -- Have to unload before this file finishes so the project main.lua doesn't shadow lodr's!
+	local function unloadConf()  -- Have to unload before this file finishes so the project main.lua doesn't shadow lodr's!
 		lovr.filesystem.unmount(target)
 	end
 
@@ -29,11 +30,12 @@ if target then
 		-- This temporary wrapper is only to catch errors in conf.lua, lovr.conf() and anything they require.
 		-- Note it assumes conf.lua creates no threads.
 		local watched = {}
-		local recursiveWatch = require("z_lodrSupport.recursiveWatch")(watched, lovr.filesystem.getRealDirectory('conf.lua'))
+		local recursiveWatch = require("z_lodrSupport.recursiveWatch")(watched,
+			lovr.filesystem.getRealDirectory('conf.lua'))
 		local makeWatchWrapper = require("z_lodrSupport.makeWrapper")(watched, 10)
 		local originalErrhand = lovr.errhand -- Store errhand from boot.lua
 
-		recursiveWatch("/") -- This invocation will wind up watching all of lodr's files, but that's okay.
+		recursiveWatch("/")            -- This invocation will wind up watching all of lodr's files, but that's okay.
 		local confErrhand = makeWatchWrapper(originalErrhand, "errhand (conf.lua)")
 
 		-- Execute conf.lua
@@ -58,7 +60,7 @@ if target then
 				_lodrConfData.conf = t
 
 				-- Late unmount-- Assume boot.lua always calls lovr.conf if it exists
-				unloadConf() 
+				unloadConf()
 				return result
 			end
 		else

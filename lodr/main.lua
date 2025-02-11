@@ -1,3 +1,4 @@
+---@diagnostic disable: lowercase-global
 -- Step one: Nab data from conf.lua
 local confData = _lodrConfData
 _lodrConfData = nil
@@ -12,10 +13,10 @@ if conf then
 		return not failed
 	end
 	local function checkType(f, ty)
-		return conf[f] and type(conf[f]) ~= ty, "conf.lodr."..f.." must be a "..ty
+		return conf[f] and type(conf[f]) ~= ty, "conf.lodr." .. f .. " must be a " .. ty
 	end
 	local function checkAllStrings(t)
-		for _,v in ipairs(t) do
+		for _, v in ipairs(t) do
 			if type(v) ~= "string" then
 				return true
 			end
@@ -23,8 +24,8 @@ if conf then
 		return false
 	end
 	local _ = confFail(checkType("checksPerFrame", "number"))
-	      and confFail(checkType("watch", "table"))
-	      and confFail(conf.watch and checkAllStrings(conf.watch), "conf.lodr.watch contained a non-string value")
+		and confFail(checkType("watch", "table"))
+		and confFail(conf.watch and checkAllStrings(conf.watch), "conf.lodr.watch contained a non-string value")
 end
 
 local mainReturn
@@ -62,7 +63,9 @@ local recursiveWatch = recursiveWatchMaker(watched, mainRealpath)
 
 if hasMain then
 	if lovr.system.getOS() == "Android" then
-		print("Loading a script from the user files directory. To upload a new script, cd to your project directory and run: adb push --sync . " .. target)
+		print(
+			"Loading a script from the user files directory. To upload a new script, cd to your project directory and run: adb push --sync . " ..
+			target)
 	end
 
 	-- TODO: Watching all files has good coverage but may not be the most efficient?
@@ -72,7 +75,7 @@ if hasMain then
 			table.insert(watched, "/conf.lua")
 		end
 	else
-		for _,v in ipairs(conf.watch) do
+		for _, v in ipairs(conf.watch) do
 			table.insert(watched, v)
 		end
 	end
@@ -122,7 +125,7 @@ else
 		-- This is kind of annoying actually
 		local atLeastOneFile, firstFileIsDirectory, atLeastTwoFiles
 		if hasProject then
-			for _,filename in ipairs(lovr.filesystem.getDirectoryItems("/")) do
+			for _, filename in ipairs(lovr.filesystem.getDirectoryItems("/")) do
 				if not filename:match('^%.') then
 					if atLeastOneFile then
 						atLeastTwoFiles = true
@@ -145,17 +148,17 @@ else
 		end
 		if lovr.system.getOS() == "Android" then
 			message = message .. "\n\nTo upload a " .. ((not hasProject or not atLeastOneFile) and "" or "fixed ")
-			                  .. "project,\ncd to your project directory and run:\n"
-			                  .. "adb push --sync . " .. target
+				.. "project,\ncd to your project directory and run:\n"
+				.. "adb push --sync . " .. target
 			-- Detect, and warn the user about, a completely miserable UX limitation in adb push
 			if firstFileIsDirectory and not atLeastTwoFiles then
 				message = message .. "\n\n-- OKAY, I'M REALLY SORRY, BUT:"
-				                  .. "\nDid you try to adb push a directory?"
-				                  .. "\nThe thing you \"adb push\" has to end with a \".\""
-				                  .. "\nSo this will work:"
-				                  .. "\nadb push YOURDIRECTORY/. " .. target
-				                  .. "\nBut this won't:"
-				                  .. "\nadb push YOURDIRECTORY " .. target
+					.. "\nDid you try to adb push a directory?"
+					.. "\nThe thing you \"adb push\" has to end with a \".\""
+					.. "\nSo this will work:"
+					.. "\nadb push YOURDIRECTORY/. " .. target
+					.. "\nBut this won't:"
+					.. "\nadb push YOURDIRECTORY " .. target
 			end
 		else
 			message = message .. "\n\nPlz fix"

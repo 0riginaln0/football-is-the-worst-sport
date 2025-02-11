@@ -13,5 +13,6 @@ function lovr.conf(t)
     t.window.resizable = true             -- Let the window be user-resizable (boolean)
     t.window.opacity = 1                  -- Window opacity value (number)
 
+    ---@diagnostic disable-next-line: lowercase-global
     conf = t.window
 end

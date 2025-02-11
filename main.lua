@@ -215,9 +215,6 @@ function lovr.keyreleased(key, scancode, repeating)
         lovr.mouse.setRelativeMode(not lovr.mouse.getRelativeMode())
         print("Mouse mode: ", lovr.mouse.getRelativeMode())
     end
-    if key == "f8" then
-        do_snapshot = true
-    end
     if key == "g" then
         track_cursor = not track_cursor
     end

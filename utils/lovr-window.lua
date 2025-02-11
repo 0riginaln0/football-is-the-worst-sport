@@ -1,3 +1,4 @@
+---@diagnostic disable: lowercase-global
 local ffi = require 'ffi'
 local C = ffi.os == 'Windows' and ffi.load('glfw3') or ffi.C
 local C_str = ffi.string
@@ -22,7 +23,7 @@ ffi.cdef [[
 
 	typedef struct GLFWwindow GLFWwindow;
 	GLFWwindow* os_get_glfw_window(void);
-	
+
 	typedef struct GLFWmonitor GLFWmonitor;
 	GLFWmonitor** glfwGetMonitors(int *count);
 	GLFWmonitor* glfwGetWindowMonitor(GLFWwindow* window);
@@ -33,41 +34,41 @@ ffi.cdef [[
 	const GLFWvidmode* glfwGetVideoMode(GLFWmonitor* monitor);
 	void glfwSetWindowMonitor(GLFWwindow* window, GLFWmonitor* monitor, int xpos, int ypos, int width, int height, int refreshRate);
 	void glfwGetMonitorWorkarea(GLFWmonitor *monitor, int *xpos, int *ypos, int *width, int *height);
-	
+
 	// icon
 	void glfwSetWindowIcon(GLFWwindow* window, int count, const GLFWimage *images);
-	
+
 	// attributes
 	void glfwSetWindowAttrib(GLFWwindow* window, int attrib, int value); //+
 	int glfwGetWindowAttrib(GLFWwindow* window, int attrib); //+
-	
+
 	// size & limits
 	void glfwSetWindowSize(GLFWwindow* window, int width, int height); //-
 	void glfwGetWindowSize(GLFWwindow* window, int *width, int *height); //-
 	void glfwSetWindowSizeLimits(GLFWwindow* window, int minwidth, int minheight, int maxwidth, int maxheight); //-
-	
+
 	// position
 	void glfwSetWindowPos(GLFWwindow* window, int xpos, int ypos);
 	void glfwGetWindowPos(GLFWwindow* window, int *xpos, int *ypos);
-	
+
 	// minimize maximize restore
 	void glfwMaximizeWindow(GLFWwindow* window);
 	void glfwIconifyWindow(GLFWwindow *window);
 	void glfwRestoreWindow(GLFWwindow *window);
-	
+
 	// title
 	void glfwSetWindowTitle(GLFWwindow* window, const char* title);
-	
+
 	// visible
 	void glfwShowWindow(GLFWwindow* window);
 	void glfwHideWindow(GLFWwindow* window);
-	
+
 	// focus
 	void glfwFocusWindow(GLFWwindow* window);
-	
+
 	// attention
 	void glfwRequestWindowAttention(GLFWwindow* window);
-	
+
 	// opacity
 	void glfwSetWindowOpacity(GLFWwindow* window, float opacity);
 	float glfwGetWindowOpacity(GLFWwindow* window);
@@ -83,8 +84,8 @@ ffi.cdef [[
 	GLFWwindowposfun glfwSetWindowPosCallback(GLFWwindow* window, GLFWwindowposfun callback);
 
 	typedef void(* GLFWdropfun) (GLFWwindow*, int, const char *[]);
-	GLFWdropfun glfwSetDropCallback(GLFWwindow* window, GLFWdropfun callback);	
-	
+	GLFWdropfun glfwSetDropCallback(GLFWwindow* window, GLFWdropfun callback);
+
 ]]
 local W = ffi.C.os_get_glfw_window()
 local window = {}
@@ -111,7 +112,7 @@ local __params = { -- default parameters list
 	msaa = 0
 }
 if conf then
-	for k,v in pairs(conf) do
+	for k, v in pairs(conf) do
 		__params[k] = v
 	end
 
@@ -128,7 +129,7 @@ function window.getDisplayCount()
 	return count[0]
 end
 
-local function check_monitor( index, throwerr )
+local function check_monitor(index, throwerr)
 	if type(index) ~= 'number' then
 		if throwerr then
 			error('Bad argument #1: number expected got ' .. type(index), 3)
@@ -149,20 +150,20 @@ local function check_monitor( index, throwerr )
 	return true
 end
 
-function window.getDisplayName( index )
-	check_monitor( index, true )
-	return C_str(C.glfwGetMonitorName( __monitors[index-1] ))
+function window.getDisplayName(index)
+	check_monitor(index, true)
+	return C_str(C.glfwGetMonitorName(__monitors[index - 1]))
 end
 
-function window.getDisplayDimensions( index )
-	check_monitor( index, true )
-	local screenmode = C.glfwGetVideoMode( __monitors[index-1] )
+function window.getDisplayDimensions(index)
+	check_monitor(index, true)
+	local screenmode = C.glfwGetVideoMode(__monitors[index - 1])
 	return screenmode.width, screenmode.height
 end
 
 ---------------------------------------------------------------------------------------------------------------
 
-function window.setIcon( source )
+function window.setIcon(source)
 	if not source then
 		C.glfwSetWindowIcon(W, 0, nil)
 		__params.icon = nil
@@ -186,7 +187,7 @@ end
 
 ---------------------------------------------------------------------------------------------------------------
 
-function window.setOpacity( value )
+function window.setOpacity(value)
 	value = math.max(0, math.min(value, 1))
 	C.glfwSetWindowOpacity(W, value)
 end
@@ -197,7 +198,7 @@ end
 
 ---------------------------------------------------------------------------------------------------------------
 
-function window.setPosition( x,y )
+function window.setPosition(x, y)
 	C.glfwSetWindowPos(W, x or 0, y or 0)
 end
 
@@ -231,7 +232,7 @@ end
 
 ---------------------------------------------------------------------------------------------------------------
 
-function window.setTitle( title )
+function window.setTitle(title)
 	C.glfwSetWindowTitle(W, title)
 	__params.title = title
 end
@@ -242,9 +243,12 @@ end
 
 ---------------------------------------------------------------------------------------------------------------
 
-function window.visible( state )
-	if state then C.glfwShowWindow(W)
-	else C.glfwHideWindow(W) end
+function window.visible(state)
+	if state then
+		C.glfwShowWindow(W)
+	else
+		C.glfwHideWindow(W)
+	end
 end
 
 function window.isVisible()
@@ -253,22 +257,23 @@ end
 
 ---------------------------------------------------------------------------------------------------------------
 
-function window.setFullscreen( state, fstype, index )
+function window.setFullscreen(state, fstype, index)
 	index = index or 1
-	index = check_monitor(index) and index-1 or 0
-	local screenmode = C.glfwGetVideoMode( __monitors[index] )
+	index = check_monitor(index) and index - 1 or 0
+	local screenmode = C.glfwGetVideoMode(__monitors[index])
 	if state then
-		assert(fstype == 'desktop' or fstype == 'exclusive', 'Invalid fullscreen type \''..tostring(fstype)..'\', expected one of : \'exclusive\' or \'desktop\'')
-		
+		assert(fstype == 'desktop' or fstype == 'exclusive',
+			'Invalid fullscreen type \'' .. tostring(fstype) .. '\', expected one of : \'exclusive\' or \'desktop\'')
+
 		if fstype == 'desktop' then
 			C.glfwSetWindowAttrib(W, C.GLFW_DECORATED, 0)
 
 			local mx, my = ffi.new('int[1]'), ffi.new('int[1]')
 			C.glfwGetMonitorPos(__monitors[index], mx, my)
 
-			C.glfwSetWindowMonitor(W, nil, mx[0],my[0], screenmode.width, screenmode.height, 0)
+			C.glfwSetWindowMonitor(W, nil, mx[0], my[0], screenmode.width, screenmode.height, 0)
 		elseif fstype == 'exclusive' then
-			C.glfwSetWindowMonitor(W, __monitors[index], 0,0, screenmode.width, screenmode.height, 0)
+			C.glfwSetWindowMonitor(W, __monitors[index], 0, 0, screenmode.width, screenmode.height, 0)
 		end
 
 		__params.fullscreentype = fstype
@@ -278,8 +283,8 @@ function window.setFullscreen( state, fstype, index )
 		__params.fullscreentype = nil
 
 		if __params.x == nil or __params.y == nil then
-			__params.x = math.random(0, screenmode.width*0.3)
-			__params.y = math.random(0, screenmode.height*0.3)
+			__params.x = math.random(0, screenmode.width * 0.3)
+			__params.y = math.random(0, screenmode.height * 0.3)
 			centered = false
 		end
 
@@ -323,14 +328,14 @@ function window.getMode()
 
 	flags.minwidth = __params.minwidth
 	flags.minheight = __params.minheight
-	
+
 	return width, height, flags
 end
 
-function window.setMode( width, height, flags )
+function window.setMode(width, height, flags)
 	if flags then
 		local _, _, mode = window.getMode()
-		for k,v in pairs(mode) do
+		for k, v in pairs(mode) do
 			if not flags[k] or flags[k] == nil then
 				flags[k] = v
 			end
@@ -339,15 +344,15 @@ function window.setMode( width, height, flags )
 		flags.display = check_monitor(flags.display) and flags.display or 1
 
 		if flags.centered then
-			local screenmode = C.glfwGetVideoMode( __monitors[flags.display-1] )
+			local screenmode = C.glfwGetVideoMode(__monitors[flags.display - 1])
 			local mx, my = ffi.new('int[1]'), ffi.new('int[1]')
-			C.glfwGetMonitorPos(__monitors[flags.display-1], mx, my)
+			C.glfwGetMonitorPos(__monitors[flags.display - 1], mx, my)
 
-			flags.x = mx[0] + screenmode.width*0.5 - width*0.5
-			flags.y = my[0] + screenmode.height*0.5 - height*0.5
+			flags.x = mx[0] + screenmode.width * 0.5 - width * 0.5
+			flags.y = my[0] + screenmode.height * 0.5 - height * 0.5
 		end
 		C.glfwSetWindowPos(W, flags.x, flags.y)
-		
+
 		C.glfwSetWindowSizeLimits(W, flags.minwidth, flags.minheight, -1, -1)
 
 		C.glfwSetWindowAttrib(W, C.GLFW_DECORATED, flags.borderless and 0 or 1)
@@ -364,8 +369,8 @@ function window.setMode( width, height, flags )
 		end
 
 		__params.width = width
-		__params.height = height 
-		for k,v in pairs(flags) do
+		__params.height = height
+		for k, v in pairs(flags) do
 			__params[k] = v
 		end
 	else
@@ -375,22 +380,22 @@ end
 
 ---------------------------------------------------------------------------------------------------------------
 
-C.glfwSetWindowMaximizeCallback(W, function( target, maximized )
+C.glfwSetWindowMaximizeCallback(W, function(target, maximized)
 	local width, height = ffi.new('int[1]'), ffi.new('int[1]')
 	C.glfwGetWindowSize(W, width, height)
 	lovr.event.push('maximized', maximized == 1, width[0], height[0])
 end)
 
-C.glfwSetWindowPosCallback(W, function( target, x,y )
+C.glfwSetWindowPosCallback(W, function(target, x, y)
 	if lovr.windowmoved then
 		lovr.windowmoved(x, y)
 	end
 end)
 
-C.glfwSetDropCallback(W, function( target, count, c_paths )
+C.glfwSetDropCallback(W, function(target, count, c_paths)
 	if lovr.dragdrop then
 		local paths = {}
-		for i=0, count-1 do
+		for i = 0, count - 1 do
 			table.insert(paths, C_str(c_paths[i]))
 		end
 		lovr.dragdrop(paths)

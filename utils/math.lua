@@ -1,4 +1,4 @@
-local utils = {}
+local m = {}
 
 -- next three functions convert mouse coordinate from screen to the 3D position on the ground plane
 local function getWorldFromScreen(pass)
@@ -39,11 +39,11 @@ local function mouseOnGround(ray)
     return hit_spot
 end
 
-function utils.cursorToWorldPoint(pass)
+function m.cursorToWorldPoint(pass)
     local world_from_screen = getWorldFromScreen(pass)
     local ray = getRay(world_from_screen)
     local spot = mouseOnGround(ray)
     return spot
 end
 
-return utils
+return m

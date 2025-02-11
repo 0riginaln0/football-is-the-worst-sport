@@ -1,13 +1,13 @@
 -------------
 -- Imports --
 -------------
-lovr.window = require 'lovr-window'
-lovr.mouse = require 'lovr-mouse'
+lovr.window = require 'utils.lovr-window'
+lovr.mouse = require 'utils.lovr-mouse'
 
-local cam = require 'cam'
+local cam = require 'utils.cam'
 cam.zoom_speed = 10
-local phywire = require 'phywire'
-local utils = require 'utils'
+local phywire = require 'utils.phywire'
+local math = require 'utils.math'
 
 
 ---------------------------
@@ -77,7 +77,6 @@ function lovr.load()
     ball:setFriction(0.7)
     ball:setMass(0.44)
 end
-
 
 ------------
 -- Update --
@@ -161,7 +160,6 @@ function lovr.update(dt)
     end
 end
 
-
 ----------
 -- Draw --
 ----------
@@ -169,7 +167,7 @@ function lovr.draw(pass)
     -- print(ball:getAngularVelocity())
     phywire.draw(pass, world)
     if track_cursor then
-        local spot = utils.cursorToWorldPoint(pass)
+        local spot = math.cursorToWorldPoint(pass)
         cursor_pos.x = spot.x
         cursor_pos.y = spot.y
         cursor_pos.z = spot.z
@@ -201,7 +199,6 @@ function lovr.draw(pass)
     cam.center = player_pos
     cam.nudge()
 end
-
 
 ---------------------
 -- Other Callbacks --

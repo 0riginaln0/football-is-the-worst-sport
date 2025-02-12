@@ -3,21 +3,27 @@
 -------------
 lovr.window = require 'utils.lovr-window'
 lovr.mouse = require 'utils.lovr-mouse'
+local math = require 'math'
 
 local cam = require 'utils.cam'
 cam.zoom_speed = 10
 cam.polar_upper = 30 * 0.0174533
 cam.polar_lower = math.pi / 2 - cam.polar_upper
 
+local tween = require 'utils.tween'
+local cam_tween_base = { value = 0 }
+local cam_tween = nil
+local cam_prev_rad_dt = 0
+
 local function incrementFov(cam, inc)
     cam.fov = cam.fov + inc
     cam.resize(lovr.system.getWindowDimensions())
-    print("New FOV:", cam.fov * 57.2958)
+    -- print("New FOV:", cam.fov * 57.2958)
 end
 
 
 local phywire = require 'utils.phywire'
-local math = require 'utils.math'
+local cam_math = require 'utils.math'
 
 
 ---------------------------
@@ -67,6 +73,8 @@ local s_just_pressed = false
 local d_just_pressed = false
 local x_just_pressed = false
 local v_just_pressed = false
+local t_just_pressed = false
+local y_just_pressed = false
 
 
 
@@ -92,7 +100,13 @@ end
 ------------
 -- Update --
 ------------
+
+local awful_bugfix = true
 function lovr.update(dt)
+    if awful_bugfix then
+        cam.nudge(1e-6) -- 1e-8 kinda stable but not. 1e-9 unstable
+        awful_bugfix = false
+    end
     accumulator = accumulator + dt
     while accumulator >= const_dt do
         world:update(const_dt)
@@ -136,27 +150,6 @@ function lovr.update(dt)
     end
 
     player_vel = Vec3(0, 0, 0)
-
-    -- Camera controls
-    if lovr.system.isKeyDown('q') then
-        cam.nudge(-1 * dt)
-    end
-    if lovr.system.isKeyDown('e') then
-        cam.nudge(1 * dt)
-    end
-    if lovr.system.isKeyDown('z') then
-        cam.nudge(0, -1 * dt, 0)
-    end
-    if lovr.system.isKeyDown('c') then
-        cam.nudge(0, 1 * dt, 0)
-    end
-    if lovr.system.isKeyDown('r') then
-        incrementFov(cam, 0.001)
-    end
-    if lovr.system.isKeyDown('f') then
-        incrementFov(cam, -0.001)
-    end
-
     -- Player movement
     if track_cursor then
         mouse_dir = cursor_pos - player_pos
@@ -175,6 +168,54 @@ function lovr.update(dt)
         end
         player_pos:add(player_vel:normalize() * 5 * dt)
     end
+
+    -- Camera controls
+
+    -- Easing of cam from slow to fast to allign camera azimut to player azimut
+
+    if t_just_pressed then
+        cam_tween = tween.new(0.4, cam_tween_base, { value = math.pi / 4 }, 'inOutExpo')
+        t_just_pressed = false
+    end
+    if y_just_pressed then
+        cam_tween = tween.new(0.4, cam_tween_base, { value = -math.pi / 4 }, 'inOutExpo')
+        y_just_pressed = false
+    end
+    if cam_tween then
+        local complete = cam_tween:update(dt)
+
+        local cam_cur_rad_dt = cam_tween_base.value - cam_prev_rad_dt
+        cam_prev_rad_dt = cam_prev_rad_dt + cam_cur_rad_dt
+        -- print(cam_cur_rad_dt)
+        cam.nudge(cam_cur_rad_dt)
+        if complete then
+            -- print("completed")
+            cam_tween = nil
+            cam_prev_rad_dt = 0
+            cam_tween_base.value = 0
+        end
+    end
+
+    if lovr.system.isKeyDown('q') then
+        cam.nudge(-1 * dt)
+        -- print("Cam azimut:", cam.azimuth)
+    end
+    if lovr.system.isKeyDown('e') then
+        cam.nudge(1 * dt)
+        -- print("Cam azimut:", cam.azimuth)
+    end
+    if lovr.system.isKeyDown('z') then
+        cam.nudge(0, -1 * dt, 0)
+    end
+    if lovr.system.isKeyDown('c') then
+        cam.nudge(0, 1 * dt, 0)
+    end
+    if lovr.system.isKeyDown('r') then
+        incrementFov(cam, 0.001)
+    end
+    if lovr.system.isKeyDown('f') then
+        incrementFov(cam, -0.001)
+    end
 end
 
 ----------
@@ -185,7 +226,7 @@ function lovr.draw(pass)
 
     phywire.draw(pass, world)
     if track_cursor then
-        local spot = math.cursorToWorldPoint(pass)
+        local spot = cam_math.cursorToWorldPoint(pass)
         cursor_pos.x = spot.x
         cursor_pos.y = spot.y
         cursor_pos.z = spot.z
@@ -232,15 +273,15 @@ end
 
 function lovr.keyreleased(key, scancode, repeating)
     if key == "f11" then
-        print("f11")
+        -- print("f11")
         local fullscreen, fullscreentype = lovr.window.getFullscreen()
-        print("Fullscreen? ", fullscreen)
+        -- print("Fullscreen? ", fullscreen)
         lovr.window.setFullscreen(not fullscreen, fullscreentype or "exclusive")
     end
     if key == "f10" then
-        print("f10 -----------------")
+        -- print("f10 -----------------")
         lovr.mouse.setRelativeMode(not lovr.mouse.getRelativeMode())
-        print("Mouse mode: ", lovr.mouse.getRelativeMode())
+        -- print("Mouse mode: ", lovr.mouse.getRelativeMode())
     end
     if key == "g" then
         track_cursor = not track_cursor
@@ -252,31 +293,39 @@ function lovr.keypressed(key)
         lovr.event.quit()
     end
     if key == "space" then
-        print("space pressed")
+        -- print("space pressed")
         space_just_pressed = true
     end
     if key == "w" then
-        print("w pressed")
+        -- print("w pressed")
         w_just_pressed = true
     end
     if key == "a" then
-        print("a pressed")
+        -- print("a pressed")
         a_just_pressed = true
     end
     if key == "s" then
-        print("s pressed")
+        -- print("s pressed")
         s_just_pressed = true
     end
     if key == "d" then
-        print("d pressed")
+        -- print("d pressed")
         d_just_pressed = true
     end
     if key == "x" then
-        print("x pressed")
+        -- print("x pressed")
         x_just_pressed = true
     end
     if key == "v" then
-        print("v pressed")
+        -- print("v pressed")
         v_just_pressed = true
+    end
+    if key == "t" then
+        -- print("v pressed")
+        t_just_pressed = true
+    end
+    if key == "y" then
+        -- print("g pressed")
+        y_just_pressed = true
     end
 end

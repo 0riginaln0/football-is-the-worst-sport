@@ -100,13 +100,7 @@ end
 ------------
 -- Update --
 ------------
-
-local awful_bugfix = true
 function lovr.update(dt)
-    if awful_bugfix then
-        cam.nudge(1e-6) -- 1e-8 kinda stable but not. 1e-9 unstable
-        awful_bugfix = false
-    end
     accumulator = accumulator + dt
     while accumulator >= const_dt do
         world:update(const_dt)

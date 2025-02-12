@@ -33,15 +33,28 @@ end
 
 -- make relative changes to camera position
 function m.nudge(delta_azimuth, delta_polar, delta_radius)
-  delta_azimuth = delta_azimuth or 0
-  delta_polar   = delta_polar or 0
-  delta_radius  = delta_radius or 0
-  m.azimuth     = m.azimuth + delta_azimuth
-  m.polar       = math.max(m.polar_upper, math.min(m.polar_lower, m.polar + delta_polar))
-  m.radius      = math.max(m.radius_lower, m.radius + delta_radius)
-  m.position.x  = m.center.x + m.radius * math.sin(m.polar) * math.cos(m.azimuth)
-  m.position.y  = m.center.y + m.radius * math.cos(m.polar)
-  m.position.z  = m.center.z + m.radius * math.sin(m.polar) * math.sin(m.azimuth)
+  delta_azimuth     = delta_azimuth or 0
+  delta_polar       = delta_polar or 0
+  delta_radius      = delta_radius or 0
+
+  -- Calculate the new azimuth value
+  local new_azimuth = m.azimuth + delta_azimuth
+
+  -- Check if the new azimuth is in the dangerous zone
+  local pi          = math.pi
+  local tolerance   = 1e-6 -- Tolerance for detecting dangerous values
+  if math.abs((new_azimuth % pi) - (0.5 * pi)) < tolerance then
+    -- Nudge the azimuth slightly to avoid the dangerous zone
+    new_azimuth = new_azimuth + 1e-6
+  end
+  -- Update the azimuth
+  m.azimuth    = new_azimuth
+
+  m.polar      = math.max(m.polar_upper, math.min(m.polar_lower, m.polar + delta_polar))
+  m.radius     = math.max(m.radius_lower, m.radius + delta_radius)
+  m.position.x = m.center.x + m.radius * math.sin(m.polar) * math.cos(m.azimuth)
+  m.position.y = m.center.y + m.radius * math.cos(m.polar)
+  m.position.z = m.center.z + m.radius * math.sin(m.polar) * math.sin(m.azimuth)
   m.pose:target(m.position, m.center, m.upvector)
 end
 

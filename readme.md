@@ -25,6 +25,9 @@ Orbital camera for the LOVR:
 Live-reload for the LOVR:
 - https://github.com/mcclure/lodr
 
+Tweening library:
+- https://github.com/kikito/tween.lua
+
 
 Misc:
 

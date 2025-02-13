@@ -168,11 +168,11 @@ function lovr.update(dt)
     -- Easing of cam from slow to fast to allign camera azimut to player azimut
 
     if t_just_pressed then
-        cam_tween = tween.new(0.4, cam_tween_base, { value = math.pi / 4 }, 'inOutExpo')
+        cam_tween = tween.new(0.1, cam_tween_base, { value = math.pi / 4 }, 'inCubic')
         t_just_pressed = false
     end
     if y_just_pressed then
-        cam_tween = tween.new(0.4, cam_tween_base, { value = -math.pi / 4 }, 'inOutExpo')
+        cam_tween = tween.new(0.1, cam_tween_base, { value = -math.pi / 4 }, 'inCubic')
         y_just_pressed = false
     end
     if cam_tween then

@@ -250,7 +250,6 @@ function lovr.draw(pass)
     pass:capsule(player_pos, player_pos + vec3(0, 1.4, 0), 0.4)
     cam.center.x = player_pos.x
     cam.center.y = player_pos.y + cam_height
-    print(cam_height)
     cam.center.z = player_pos.z
     cam.nudge()
 end

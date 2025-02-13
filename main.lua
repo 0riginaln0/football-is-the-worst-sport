@@ -9,6 +9,7 @@ local cam = require 'utils.cam'
 cam.zoom_speed = 10
 cam.polar_upper = 30 * 0.0174533
 cam.polar_lower = math.pi / 2 - cam.polar_upper
+local cam_height = 4
 
 local tween = require 'utils.tween'
 local cam_tween_base = { value = 0 }
@@ -191,10 +192,16 @@ function lovr.update(dt)
         cam.nudge(1 * dt)
     end
     if lovr.system.isKeyDown('z') then
-        cam.nudge(0, -1 * dt, 0)
+        cam.nudge(0, -1 * dt)
     end
     if lovr.system.isKeyDown('c') then
-        cam.nudge(0, 1 * dt, 0)
+        cam.nudge(0, 1 * dt)
+    end
+    if lovr.system.isKeyDown('b') then
+        cam_height = cam_height + 1 * dt
+    end
+    if lovr.system.isKeyDown('n') then
+        cam_height = cam_height - 1 * dt
     end
     if lovr.system.isKeyDown('r') then
         incrementFov(cam, 0.001)
@@ -241,7 +248,10 @@ function lovr.draw(pass)
     pass:setColor(1, 1, 1)
     pass:setColor(0xD0A010)
     pass:capsule(player_pos, player_pos + vec3(0, 1.4, 0), 0.4)
-    cam.center = player_pos
+    cam.center.x = player_pos.x
+    cam.center.y = player_pos.y + cam_height
+    print(cam_height)
+    cam.center.z = player_pos.z
     cam.nudge()
 end
 

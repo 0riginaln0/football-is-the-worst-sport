@@ -18,7 +18,6 @@ local cam_prev_rad_dt = 0
 local function incrementFov(cam, inc)
     cam.fov = cam.fov + inc
     cam.resize(lovr.system.getWindowDimensions())
-    -- print("New FOV:", cam.fov * 57.2958)
 end
 
 
@@ -77,7 +76,6 @@ local t_just_pressed = false
 local y_just_pressed = false
 
 
-
 ----------
 -- Load --
 ----------
@@ -105,12 +103,10 @@ function lovr.update(dt)
     while accumulator >= const_dt do
         world:update(const_dt)
         accumulator = accumulator - const_dt
-
         if space_just_pressed then
             ball:applyForce(0, 77, 0)
             space_just_pressed = false
         end
-
         if w_just_pressed then
             ball:applyTorque(1, 0, 0)
             w_just_pressed = false
@@ -164,9 +160,7 @@ function lovr.update(dt)
     end
 
     -- Camera controls
-
     -- Easing of cam from slow to fast to allign camera azimut to player azimut
-
     if t_just_pressed then
         cam_tween = tween.new(0.1, cam_tween_base, { value = -math.pi / 4 }, tween.easing.inQuad)
         t_just_pressed = false
@@ -192,11 +186,9 @@ function lovr.update(dt)
 
     if lovr.system.isKeyDown('q') then
         cam.nudge(-1 * dt)
-        -- print("Cam azimut:", cam.azimuth)
     end
     if lovr.system.isKeyDown('e') then
         cam.nudge(1 * dt)
-        -- print("Cam azimut:", cam.azimuth)
     end
     if lovr.system.isKeyDown('z') then
         cam.nudge(0, -1 * dt, 0)
@@ -256,7 +248,6 @@ end
 ---------------------
 -- Other Callbacks --
 ---------------------
-
 function lovr.resize(width, height)
     cam.resize(width, height)
 end
@@ -267,15 +258,11 @@ end
 
 function lovr.keyreleased(key, scancode, repeating)
     if key == "f11" then
-        -- print("f11")
         local fullscreen, fullscreentype = lovr.window.getFullscreen()
-        -- print("Fullscreen? ", fullscreen)
         lovr.window.setFullscreen(not fullscreen, fullscreentype or "exclusive")
     end
     if key == "f10" then
-        -- print("f10 -----------------")
         lovr.mouse.setRelativeMode(not lovr.mouse.getRelativeMode())
-        -- print("Mouse mode: ", lovr.mouse.getRelativeMode())
     end
     if key == "g" then
         track_cursor = not track_cursor
@@ -287,39 +274,30 @@ function lovr.keypressed(key)
         lovr.event.quit()
     end
     if key == "space" then
-        -- print("space pressed")
         space_just_pressed = true
     end
     if key == "w" then
-        -- print("w pressed")
         w_just_pressed = true
     end
     if key == "a" then
-        -- print("a pressed")
         a_just_pressed = true
     end
     if key == "s" then
-        -- print("s pressed")
         s_just_pressed = true
     end
     if key == "d" then
-        -- print("d pressed")
         d_just_pressed = true
     end
     if key == "x" then
-        -- print("x pressed")
         x_just_pressed = true
     end
     if key == "v" then
-        -- print("v pressed")
         v_just_pressed = true
     end
     if key == "t" then
-        -- print("v pressed")
         t_just_pressed = true
     end
     if key == "y" then
-        -- print("g pressed")
         y_just_pressed = true
     end
 end

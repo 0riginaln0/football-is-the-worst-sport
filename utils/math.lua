@@ -4,7 +4,7 @@ local m = {}
 local function getWorldFromScreen(pass)
     local w, h = pass:getDimensions()
     local clip_from_screen = mat4(-1, -1, 0):scale(2 / w, 2 / h, 1)
-    local view_pose = mat4(pass:getViewPose(1))
+    local view_pose = pass:getViewPose(1, mat4(), true):invert()
     local view_proj = pass:getProjection(1, mat4())
     return view_pose:mul(view_proj:invert()):mul(clip_from_screen)
 end

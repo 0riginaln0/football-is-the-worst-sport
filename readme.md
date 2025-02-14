@@ -28,6 +28,9 @@ Live-reload for the LOVR:
 Tweening library:
 - https://github.com/kikito/tween.lua
 
+Lua functions geared towards gamedev:
+- https://github.com/rxi/lume
+
 
 Misc:
 

@@ -104,6 +104,7 @@ function lovr.update(dt)
     while accumulator >= const_dt do
         world:update(const_dt)
         accumulator = accumulator - const_dt
+
         if space_just_pressed then
             ball:applyForce(0, 77, 0)
             space_just_pressed = false
@@ -138,38 +139,16 @@ function lovr.update(dt)
         end
         local magnusX, magnusY, magnusZ = calculateMagnusForce(ball)
         ball:applyForce(magnusX, magnusY, magnusZ) -- Apply the Magnus force
-
-        -- Camera controls
-        -- Easing of cam from slow to fast to allign camera azimut to player azimut
-        if t_just_pressed then
-            cam_tween = tween.new(0.1, cam_tween_base, { value = -math.pi / 4 }, tween.easing.inQuad)
-            t_just_pressed = false
-        end
-        if y_just_pressed then
-            cam_tween = tween.new(0.1, cam_tween_base, { value = math.pi / 4 }, tween.easing.inQuad)
-            y_just_pressed = false
-        end
-        if cam_tween then
-            local complete = cam_tween:update(const_dt)
-
-            local cam_cur_rad_dt = cam_tween_base.value - cam_prev_rad_dt
-            cam_prev_rad_dt = cam_prev_rad_dt + cam_cur_rad_dt
-            -- print(cam_cur_rad_dt)
-            cam.nudge(cam_cur_rad_dt)
-            if complete then
-                -- print("completed")
-                cam_tween = nil
-                cam_prev_rad_dt = 0
-                cam_tween_base.value = 0
-            end
-        end
     end
 
-    player_vel = Vec3(0, 0, 0)
+
+    player_vel.x = 0
+    player_vel.y = 0
+    player_vel.z = 0
     -- Player movement
     if track_cursor then
         mouse_dir = cursor_pos - player_pos
-        player_pos:add(mouse_dir * dt)
+        player_vel:add(mouse_dir * dt)
     else
         if lovr.system.isKeyDown('w', 'up') then
             player_vel.z = -1
@@ -182,11 +161,30 @@ function lovr.update(dt)
         elseif lovr.system.isKeyDown('d', 'right') then
             player_vel.x = 1
         end
-        player_pos:add(player_vel:normalize() * 5 * dt)
     end
+    player_pos:add(player_vel:normalize() * dt * 7)
 
-
-
+    -- Camera controls
+    -- Easing of cam from slow to fast to allign camera azimut to player azimut
+    if t_just_pressed then
+        cam_tween = tween.new(0.13, cam_tween_base, { value = -math.pi / 4 }, tween.easing.inQuad)
+        t_just_pressed = false
+    end
+    if y_just_pressed then
+        cam_tween = tween.new(0.13, cam_tween_base, { value = math.pi / 4 }, tween.easing.inQuad)
+        y_just_pressed = false
+    end
+    if cam_tween then
+        local complete = cam_tween:update(dt)
+        local cam_cur_rad_dt = cam_tween_base.value - cam_prev_rad_dt
+        cam_prev_rad_dt = cam_prev_rad_dt + cam_cur_rad_dt
+        cam.nudge(cam_cur_rad_dt)
+        if complete then
+            cam_tween = nil
+            cam_prev_rad_dt = 0
+            cam_tween_base.value = 0
+        end
+    end
     if lovr.system.isKeyDown('q') then
         cam.nudge(-1 * dt)
     end

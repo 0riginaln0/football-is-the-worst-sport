@@ -138,6 +138,31 @@ function lovr.update(dt)
         end
         local magnusX, magnusY, magnusZ = calculateMagnusForce(ball)
         ball:applyForce(magnusX, magnusY, magnusZ) -- Apply the Magnus force
+
+        -- Camera controls
+        -- Easing of cam from slow to fast to allign camera azimut to player azimut
+        if t_just_pressed then
+            cam_tween = tween.new(0.1, cam_tween_base, { value = -math.pi / 4 }, tween.easing.inQuad)
+            t_just_pressed = false
+        end
+        if y_just_pressed then
+            cam_tween = tween.new(0.1, cam_tween_base, { value = math.pi / 4 }, tween.easing.inQuad)
+            y_just_pressed = false
+        end
+        if cam_tween then
+            local complete = cam_tween:update(const_dt)
+
+            local cam_cur_rad_dt = cam_tween_base.value - cam_prev_rad_dt
+            cam_prev_rad_dt = cam_prev_rad_dt + cam_cur_rad_dt
+            -- print(cam_cur_rad_dt)
+            cam.nudge(cam_cur_rad_dt)
+            if complete then
+                -- print("completed")
+                cam_tween = nil
+                cam_prev_rad_dt = 0
+                cam_tween_base.value = 0
+            end
+        end
     end
 
     player_vel = Vec3(0, 0, 0)
@@ -160,30 +185,7 @@ function lovr.update(dt)
         player_pos:add(player_vel:normalize() * 5 * dt)
     end
 
-    -- Camera controls
-    -- Easing of cam from slow to fast to allign camera azimut to player azimut
-    if t_just_pressed then
-        cam_tween = tween.new(0.1, cam_tween_base, { value = -math.pi / 4 }, tween.easing.inQuad)
-        t_just_pressed = false
-    end
-    if y_just_pressed then
-        cam_tween = tween.new(0.1, cam_tween_base, { value = math.pi / 4 }, tween.easing.inQuad)
-        y_just_pressed = false
-    end
-    if cam_tween then
-        local complete = cam_tween:update(dt)
 
-        local cam_cur_rad_dt = cam_tween_base.value - cam_prev_rad_dt
-        cam_prev_rad_dt = cam_prev_rad_dt + cam_cur_rad_dt
-        -- print(cam_cur_rad_dt)
-        cam.nudge(cam_cur_rad_dt)
-        if complete then
-            -- print("completed")
-            cam_tween = nil
-            cam_prev_rad_dt = 0
-            cam_tween_base.value = 0
-        end
-    end
 
     if lovr.system.isKeyDown('q') then
         cam.nudge(-1 * dt)
@@ -216,6 +218,9 @@ end
 ----------
 function lovr.draw(pass)
     cam.setCamera(pass)
+
+    pass:setColor(0x121212)
+    pass:plane(0, 0.01, 0, 90, 120, -math.pi / 2, 1, 0, 0, 'line', 90, 120)
 
     phywire.draw(pass, world)
     if track_cursor then

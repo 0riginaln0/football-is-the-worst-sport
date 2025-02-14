@@ -9,7 +9,7 @@ local cam = require 'utils.cam'
 cam.zoom_speed = 10
 cam.polar_upper = 30 * 0.0174533
 cam.polar_lower = math.pi / 2 - cam.polar_upper
-local cam_height = 4
+local cam_height = 0
 
 local tween = require 'utils.tween'
 local cam_tween_base = { value = 0 }
@@ -29,9 +29,10 @@ local cam_math = require 'utils.math'
 ---------------------------
 -- Constants & Variables --
 ---------------------------
-local player_pos = Vec3()
+local player
+local player_pos = Vec3(0, 0, 0)
 local player_vel = Vec3(0, 0, 0)
-local track_cursor = false
+local track_cursor = true
 local cursor_pos = Vec3(0, 0, 0)
 local mouse_dir = Vec3(0, 0, 0)
 
@@ -94,6 +95,11 @@ function lovr.load()
     ball:setRestitution(0.7)
     ball:setFriction(0.7)
     ball:setMass(0.44)
+
+    -- player
+    player = world:newCapsuleCollider(player_pos, 0.4, 1.4)
+    player:setOrientation(math.pi / 2, 2, 0, 0)
+    player:setMass(100)
 end
 
 ------------
@@ -142,13 +148,32 @@ function lovr.update(dt)
     end
 
 
-    player_vel.x = 0
-    player_vel.y = 0
-    player_vel.z = 0
     -- Player movement
     if track_cursor then
-        mouse_dir = cursor_pos - player_pos
-        player_vel:add(mouse_dir * dt)
+        local curr_player_pos = vec3(player:getPosition())
+        curr_player_pos.y = 0
+        mouse_dir = cursor_pos - curr_player_pos
+        local mouse_dir_length = mouse_dir:length()
+        local speed
+        if mouse_dir_length > 3.5 then
+            speed = mouse_dir:normalize() * 500
+        elseif mouse_dir_length > 2.5 then
+            speed = mouse_dir:normalize() * 300
+        elseif mouse_dir_length > 1 then
+            speed = mouse_dir:normalize() * 150
+        else
+            speed = vec3(0, 0, 0)
+        end
+        player:setLinearVelocity(speed * const_dt)
+        player:setOrientation(math.pi / 2, 2, 0, 0)
+        local x, y, z = player:getPosition()
+        player_pos.x = x
+        player_pos.y = y
+        player_pos.z = z
+        cam.center.x = player_pos.x
+        cam.center.y = player_pos.y + cam_height
+        cam.center.z = player_pos.z
+        cam.nudge()
     else
         if lovr.system.isKeyDown('w', 'up') then
             player_vel.z = -1
@@ -162,7 +187,6 @@ function lovr.update(dt)
             player_vel.x = 1
         end
     end
-    player_pos:add(player_vel:normalize() * dt * 7)
 
     -- Camera controls
     -- Easing of cam from slow to fast to allign camera azimut to player azimut
@@ -239,6 +263,16 @@ function lovr.draw(pass)
         elseif shapeType == 'sphere' then
             pass:setColor(1, 1, 1)
             pass:sphere(x, y, z, shape:getRadius())
+        elseif shapeType == "capsule" then
+            pass:setColor(0xD0A010)
+            pass:capsule(x, y, z, 0.4, 1.4, angle, ax, ay, az)
+            player_pos.x = x
+            player_pos.y = y
+            player_pos.z = z
+            cam.center.x = player_pos.x
+            cam.center.y = player_pos.y + cam_height
+            cam.center.z = player_pos.z
+            cam.nudge()
         end
     end
 
@@ -249,12 +283,8 @@ function lovr.draw(pass)
     pass:sphere(-1, 0, 0, 0.2)
 
     pass:setColor(1, 1, 1)
-    pass:setColor(0xD0A010)
-    pass:capsule(player_pos, player_pos + vec3(0, 1.4, 0), 0.4)
-    cam.center.x = player_pos.x
-    cam.center.y = player_pos.y + cam_height
-    cam.center.z = player_pos.z
-    cam.nudge()
+    -- pass:setColor(0xD0A010)
+    -- pass:capsule(player_pos, player_pos + vec3(0, 1.4, 0), 0.4)
 end
 
 ---------------------

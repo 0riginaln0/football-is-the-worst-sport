@@ -4,6 +4,7 @@
 lovr.window = require 'utils.lovr-window'
 lovr.mouse = require 'utils.lovr-mouse'
 local math = require 'math'
+local lume = require 'utils.lume'
 
 local cam = require 'utils.cam'
 cam.zoom_speed = 10
@@ -31,10 +32,13 @@ local cam_math = require 'utils.math'
 ---------------------------
 local player
 local player_pos = Vec3(0, 0, 0)
-local player_vel = Vec3(0, 0, 0)
 local track_cursor = true
 local cursor_pos = Vec3(0, 0, 0)
 local mouse_dir = Vec3(0, 0, 0)
+local player_max_speed = 500
+local player_min_speed = 0
+local mouse_dir_max_length = 5
+local mouse_dir_min_length = 0
 
 local world
 local const_dt = 0.01666666666 -- my constant dt
@@ -44,6 +48,8 @@ local ball
 local ball_radius = 0.25
 local init_ball_position = vec3(-1, 10, -1)
 local k = 0.001 -- Adjust this constant based on the desired curve effect
+
+local box
 
 local function calculateMagnusForce(ball)
     local angular_vx, angular_vy, angular_vz = ball:getAngularVelocity() -- Get the ball's spin (ω)
@@ -88,7 +94,7 @@ function lovr.load()
     world:setLinearDamping(0.001)
 
     -- ground plane
-    local box = world:newBoxCollider(vec3(0, -2, 0), vec3(90, 4, 120))
+    box = world:newBoxCollider(vec3(0, -2, 0), vec3(90, 4, 120))
     box:setKinematic(true)
     -- ball
     ball = world:newSphereCollider(init_ball_position, ball_radius)
@@ -145,48 +151,34 @@ function lovr.update(dt)
         end
         local magnusX, magnusY, magnusZ = calculateMagnusForce(ball)
         ball:applyForce(magnusX, magnusY, magnusZ) -- Apply the Magnus force
-    end
 
-
-    -- Player movement
-    if track_cursor then
-        local curr_player_pos = vec3(player:getPosition())
-        curr_player_pos.y = 0
-        mouse_dir = cursor_pos - curr_player_pos
-        local mouse_dir_length = mouse_dir:length()
-        local speed
-        if mouse_dir_length > 3.5 then
-            speed = mouse_dir:normalize() * 500
-        elseif mouse_dir_length > 2.5 then
-            speed = mouse_dir:normalize() * 300
-        elseif mouse_dir_length > 1 then
-            speed = mouse_dir:normalize() * 150
-        else
-            speed = vec3(0, 0, 0)
-        end
-        player:setLinearVelocity(speed * const_dt)
-        player:setOrientation(math.pi / 2, 2, 0, 0)
-        local x, y, z = player:getPosition()
-        player_pos.x = x
-        player_pos.y = y
-        player_pos.z = z
-        cam.center.x = player_pos.x
-        cam.center.y = player_pos.y + cam_height
-        cam.center.z = player_pos.z
-        cam.nudge()
-    else
-        if lovr.system.isKeyDown('w', 'up') then
-            player_vel.z = -1
-        elseif lovr.system.isKeyDown('s', 'down') then
-            player_vel.z = 1
-        end
-
-        if lovr.system.isKeyDown('a', 'left') then
-            player_vel.x = -1
-        elseif lovr.system.isKeyDown('d', 'right') then
-            player_vel.x = 1
+        -- Player movement
+        if track_cursor then
+            local curr_player_pos  = vec3(player:getPosition())
+            curr_player_pos.y      = 0
+            mouse_dir              = cursor_pos - curr_player_pos
+            local mouse_dir_length = mouse_dir:length()
+            local clamped_length   =
+                lume.clamp(mouse_dir_length, mouse_dir_min_length, mouse_dir_max_length)
+            local t                =
+                (clamped_length - mouse_dir_min_length) / (mouse_dir_max_length - mouse_dir_min_length)
+            local speed_magnitude  = lume.smooth(player_min_speed, player_max_speed, t)
+            local speed            = mouse_dir:normalize() * speed_magnitude
+            player:setLinearVelocity(speed * const_dt)
+            player:setOrientation(math.pi / 2, 2, 0, 0)
+            local x, y, z = player:getPosition()
+            player_pos.x = x
+            player_pos.y = y
+            player_pos.z = z
+            cam.center.x = player_pos.x
+            cam.center.y = player_pos.y + cam_height
+            cam.center.z = player_pos.z
+            cam.nudge()
         end
     end
+
+
+
 
     -- Camera controls
     -- Easing of cam from slow to fast to allign camera azimut to player azimut

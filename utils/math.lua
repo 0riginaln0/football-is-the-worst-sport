@@ -1,11 +1,13 @@
 local m = {}
 
 -- next three functions convert mouse coordinate from screen to the 3D position on the ground plane
-local function getWorldFromScreen(pass)
+local function getWorldFromScreen(pass, cam)
     local w, h = pass:getDimensions()
     local clip_from_screen = mat4(-1, -1, 0):scale(2 / w, 2 / h, 1)
-    local view_pose = pass:getViewPose(1, mat4(), true):invert()
-    local view_proj = pass:getProjection(1, mat4())
+    -- local view_pose = pass:getViewPose(1, mat4(), true):invert()
+    local view_pose = lovr.math.mat4(cam.pose)
+    -- local view_proj = pass:getProjection(1, mat4())
+    local view_proj = lovr.math.mat4(cam.projection)
     return view_pose:mul(view_proj:invert()):mul(clip_from_screen)
 end
 
@@ -39,8 +41,8 @@ local function mouseOnGround(ray)
     return hit_spot
 end
 
-function m.cursorToWorldPoint(pass)
-    local world_from_screen = getWorldFromScreen(pass)
+function m.cursorToWorldPoint(pass, cam)
+    local world_from_screen = getWorldFromScreen(pass, cam)
     local ray = getRay(world_from_screen)
     local spot = mouseOnGround(ray)
     return spot

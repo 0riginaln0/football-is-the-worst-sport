@@ -12,6 +12,11 @@ cam.polar_upper = 30 * 0.0174533
 cam.polar_lower = math.pi / 2 - cam.polar_upper
 local cam_height = 0
 
+local turn_cam = require 'utils.turn-cam'
+turn_cam.zoom_speed = cam.zoom_speed
+turn_cam.polar_upper = cam.polar_upper
+turn_cam.polar_lower = cam.polar_lower
+
 local tween = require 'utils.tween'
 local cam_tween_base = { value = 0 }
 local cam_tween = nil
@@ -173,7 +178,11 @@ function lovr.update(dt)
             cam.center.x = player_pos.x
             cam.center.y = player_pos.y + cam_height
             cam.center.z = player_pos.z
+            turn_cam.center.x = cam.center.x
+            turn_cam.center.y = cam.center.y
+            turn_cam.center.z = cam.center.z
             cam.nudge()
+            turn_cam.nudge()
         end
     end
 
@@ -231,14 +240,20 @@ end
 -- Draw --
 ----------
 function lovr.draw(pass)
-    cam.setCamera(pass)
+    -- Switch between cameras based on input
+    if lovr.system.isKeyDown('i') then
+        turn_cam.setCamera(pass)
+    else
+        cam.setCamera(pass)
+    end
+
 
     pass:setColor(0x121212)
     pass:plane(0, 0.01, 0, 90, 120, -math.pi / 2, 1, 0, 0, 'line', 90, 120)
 
     phywire.draw(pass, world)
     if track_cursor then
-        local spot = cam_math.cursorToWorldPoint(pass)
+        local spot = cam_math.cursorToWorldPoint(pass, cam)
         cursor_pos.x = spot.x
         cursor_pos.y = spot.y
         cursor_pos.z = spot.z
@@ -264,7 +279,11 @@ function lovr.draw(pass)
             cam.center.x = player_pos.x
             cam.center.y = player_pos.y + cam_height
             cam.center.z = player_pos.z
+            turn_cam.center.x = cam.center.x
+            turn_cam.center.y = cam.center.y
+            turn_cam.center.z = cam.center.z
             cam.nudge()
+            turn_cam.nudge()
         end
     end
 

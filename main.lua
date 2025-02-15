@@ -6,13 +6,13 @@ lovr.mouse = require 'utils.lovr-mouse'
 local math = require 'math'
 local lume = require 'utils.lume'
 
-local cam = require 'utils.cam'
+local cam = dofile 'utils/cam.lua'
 cam.zoom_speed = 10
 cam.polar_upper = 30 * 0.0174533
 cam.polar_lower = math.pi / 2 - cam.polar_upper
 local cam_height = 0
 
-local turn_cam = require 'utils.turn-cam'
+local turn_cam = dofile 'utils/cam.lua'
 turn_cam.zoom_speed = cam.zoom_speed
 turn_cam.polar_upper = cam.polar_upper
 turn_cam.polar_lower = cam.polar_lower

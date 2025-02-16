@@ -6,13 +6,14 @@ lovr.mouse = require 'utils.lovr-mouse'
 local math = require 'math'
 local lume = require 'utils.lume'
 
-local cam = dofile 'utils/cam.lua'
+local newCam = require 'utils.cam'
+local cam = newCam()
 cam.zoom_speed = 10
 cam.polar_upper = 30 * 0.0174533
 cam.polar_lower = math.pi / 2 - cam.polar_upper
 local cam_height = 0
 
-local turn_cam = dofile 'utils/cam.lua'
+local turn_cam = newCam()
 turn_cam.zoom_speed = cam.zoom_speed
 turn_cam.polar_upper = cam.polar_upper
 turn_cam.polar_lower = cam.polar_lower
@@ -22,19 +23,25 @@ local cam_tween_base = { value = 0 }
 local cam_tween = nil
 local cam_prev_rad_dt = 0
 
-local function incrementFov(cam, inc)
-    cam.fov = cam.fov + inc
-    cam.resize(lovr.system.getWindowDimensions())
-end
-
 
 local phywire = require 'utils.phywire'
-local cam_math = require 'utils.math'
+local cursor = require 'utils.cursor'
 
 
 ---------------------------
 -- Constants & Variables --
 ---------------------------
+local world
+local const_dt = 0.01666666666 -- my constant dt
+local accumulator = 0          -- accumulator of time to simulate
+
+local ground
+
+local ball
+local ball_radius = 0.25
+local init_ball_position = vec3(-1, 10, -1)
+local k = 0.001 -- Adjust this constant based on the desired curve effect
+
 local player
 local player_pos = Vec3(0, 0, 0)
 local track_cursor = true
@@ -42,19 +49,8 @@ local cursor_pos = Vec3(0, 0, 0)
 local mouse_dir = Vec3(0, 0, 0)
 local player_max_speed = 500
 local player_min_speed = 0
-local mouse_dir_max_length = 5
-local mouse_dir_min_length = 0
-
-local world
-local const_dt = 0.01666666666 -- my constant dt
-local accumulator = 0          -- accumulator of time to simulate
-
-local ball
-local ball_radius = 0.25
-local init_ball_position = vec3(-1, 10, -1)
-local k = 0.001 -- Adjust this constant based on the desired curve effect
-
-local box
+local mouse_dir_max_len = 7
+local mouse_dir_min_len = 0.5
 
 local function calculateMagnusForce(ball)
     local angular_vx, angular_vy, angular_vz = ball:getAngularVelocity() -- Get the ball's spin (ω)
@@ -99,8 +95,8 @@ function lovr.load()
     world:setLinearDamping(0.001)
 
     -- ground plane
-    box = world:newBoxCollider(vec3(0, -2, 0), vec3(90, 4, 120))
-    box:setKinematic(true)
+    ground = world:newBoxCollider(vec3(0, -2, 0), vec3(90, 4, 120))
+    ground:setKinematic(true)
     -- ball
     ball = world:newSphereCollider(init_ball_position, ball_radius)
     ball:setRestitution(0.7)
@@ -159,16 +155,14 @@ function lovr.update(dt)
 
         -- Player movement
         if track_cursor then
-            local curr_player_pos  = vec3(player:getPosition())
-            curr_player_pos.y      = 0
-            mouse_dir              = cursor_pos - curr_player_pos
-            local mouse_dir_length = mouse_dir:length()
-            local clamped_length   =
-                lume.clamp(mouse_dir_length, mouse_dir_min_length, mouse_dir_max_length)
-            local t                =
-                (clamped_length - mouse_dir_min_length) / (mouse_dir_max_length - mouse_dir_min_length)
-            local speed_magnitude  = lume.smooth(player_min_speed, player_max_speed, t)
-            local speed            = mouse_dir:normalize() * speed_magnitude
+            local curr_player_pos = vec3(player:getPosition())
+            curr_player_pos.y = 0
+            mouse_dir = cursor_pos - curr_player_pos
+            local mouse_dir_len = mouse_dir:length()
+            local clamped_len = lume.clamp(mouse_dir_len, mouse_dir_min_len, mouse_dir_max_len)
+            local t = (clamped_len - mouse_dir_min_len) / (mouse_dir_max_len - mouse_dir_min_len)
+            local speed_magnitude = lume.smooth(player_min_speed, player_max_speed, t)
+            local speed = mouse_dir:normalize() * speed_magnitude
             player:setLinearVelocity(speed * const_dt)
             player:setOrientation(math.pi / 2, 2, 0, 0)
             local x, y, z = player:getPosition()
@@ -229,10 +223,10 @@ function lovr.update(dt)
         cam_height = cam_height - 1 * dt
     end
     if lovr.system.isKeyDown('r') then
-        incrementFov(cam, 0.001)
+        cam.incrementFov(0.001)
     end
     if lovr.system.isKeyDown('f') then
-        incrementFov(cam, -0.001)
+        cam.incrementFov(-0.001)
     end
 end
 
@@ -253,7 +247,7 @@ function lovr.draw(pass)
 
     phywire.draw(pass, world)
     if track_cursor then
-        local spot = cam_math.cursorToWorldPoint(pass, cam)
+        local spot = cursor.cursorToWorldPoint(pass, cam)
         cursor_pos.x = spot.x
         cursor_pos.y = spot.y
         cursor_pos.z = spot.z
@@ -273,17 +267,6 @@ function lovr.draw(pass)
         elseif shapeType == "capsule" then
             pass:setColor(0xD0A010)
             pass:capsule(x, y, z, 0.4, 1.4, angle, ax, ay, az)
-            player_pos.x = x
-            player_pos.y = y
-            player_pos.z = z
-            cam.center.x = player_pos.x
-            cam.center.y = player_pos.y + cam_height
-            cam.center.z = player_pos.z
-            turn_cam.center.x = cam.center.x
-            turn_cam.center.y = cam.center.y
-            turn_cam.center.z = cam.center.z
-            cam.nudge()
-            turn_cam.nudge()
         end
     end
 
@@ -294,8 +277,6 @@ function lovr.draw(pass)
     pass:sphere(-1, 0, 0, 0.2)
 
     pass:setColor(1, 1, 1)
-    -- pass:setColor(0xD0A010)
-    -- pass:capsule(player_pos, player_pos + vec3(0, 1.4, 0), 0.4)
 end
 
 ---------------------
@@ -303,10 +284,12 @@ end
 ---------------------
 function lovr.resize(width, height)
     cam.resize(width, height)
+    turn_cam.resize(width, height)
 end
 
 function lovr.wheelmoved(dx, dy)
     cam.wheelmoved(dx, dy)
+    turn_cam.wheelmoved(dx, dy)
 end
 
 function lovr.keyreleased(key, scancode, repeating)

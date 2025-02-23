@@ -25,6 +25,11 @@ local cam_prev_rad_dt = 0
 
 
 local phywire = require 'utils.phywire'
+phywire.options.show_shapes = true     -- draw collider shapes (on by default)
+phywire.options.show_velocities = true -- vector showing direction and magnitude of collider linear velocity
+phywire.options.show_angulars = true   -- gizmo displaying the collider's angular velocity
+phywire.options.show_joints = true     -- show joints between colliders
+phywire.options.show_contacts = true   -- show collision contacts (quite inefficient, triples the needed collision computations)
 local cursor = require 'utils.cursor'
 
 

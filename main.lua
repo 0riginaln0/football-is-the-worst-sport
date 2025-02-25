@@ -1,6 +1,7 @@
 -------------
 -- Imports --
 -------------
+local pprint = require 'utils.pprint'
 lovr.window = require 'utils.lovr-window'
 lovr.mouse = require 'utils.lovr-mouse'
 local math = require 'math'
@@ -112,6 +113,22 @@ function lovr.load()
     player = world:newCapsuleCollider(player_pos, 0.4, 1.4)
     player:setOrientation(math.pi / 2, 2, 0, 0)
     player:setMass(100)
+
+
+    -- Parsing cli arguments
+    for _, value in pairs(arg) do
+        if value == '--hb' then -- Enable heartbeat
+            local heartbeat_file = io.open("heartbeat.lua", 'r')
+            if not heartbeat_file then
+                print("no hearbeat.lua file found")
+                os.exit(-1)
+            end
+            local heartbeat_code = heartbeat_file:read("*a")
+            local thread = lovr.thread.newThread(heartbeat_code)
+            thread:start()
+            heartbeat_file:close()
+        end
+    end
 end
 
 ------------

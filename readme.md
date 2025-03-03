@@ -14,9 +14,16 @@ lovr.AppImage .
 
 # For me
 
+```shell
+lovrc --watch .
+```
+
+or
+
 Run: `ctrl+shift+b` (Runs the _Run LÖvr_ task)
 
 Live-Reload: `shift-b` (my keybinding to _Tasks: Restart Running Task_)
+
 
 # Awesomeness:
 

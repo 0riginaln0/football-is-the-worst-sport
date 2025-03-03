@@ -361,4 +361,7 @@ function lovr.keypressed(key)
     if key == "y" then
         y_just_pressed = true
     end
+    if key == '0' then
+        print(lovr.timer.getFPS())
+    end
 end

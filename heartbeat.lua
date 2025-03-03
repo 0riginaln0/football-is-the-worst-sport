@@ -1,6 +1,6 @@
 require 'lovr.filesystem' -- To get `require` work properly
 local http = require 'http'
-local json = require 'utils.json'
+local json = require 'lib.json'
 local lovr = {
     thread = require 'lovr.thread',
     timer = require 'lovr.timer',

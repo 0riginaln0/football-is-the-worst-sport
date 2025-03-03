@@ -7,7 +7,7 @@ local math = require 'math'
 local lume = require 'lib.lume'
 local dbg = require 'lib.debugger'
 
-local newCam = require 'utils.cam'
+local newCam = require 'lib.cam'
 local cam = newCam()
 cam.zoom_speed = 10
 cam.polar_upper = 30 * 0.0174533
@@ -31,7 +31,7 @@ phywire.options.show_velocities = true -- vector showing direction and magnitude
 phywire.options.show_angulars = true   -- gizmo displaying the collider's angular velocity
 phywire.options.show_joints = true     -- show joints between colliders
 phywire.options.show_contacts = true   -- show collision contacts (quite inefficient, triples the needed collision computations)
-local cursor = require 'lib.cursor'
+local cursor = require 'utils.cursor'
 
 
 ---------------------------

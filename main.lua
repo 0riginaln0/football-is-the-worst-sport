@@ -142,10 +142,6 @@ local function updatePhysics(dt)
             ball:applyForce(0, 77, 0)
             space_just_pressed = false
         end
-        if w_just_pressed then
-            ball:applyTorque(1, 0, 0)
-            w_just_pressed = false
-        end
         if a_just_pressed then
             ball:applyTorque(0, 0, -1)
             a_just_pressed = false
@@ -177,7 +173,10 @@ local function updatePhysics(dt)
         if track_cursor then
             local curr_player_pos = vec3(player:getPosition())
             curr_player_pos.y = 0
-            mouse_dir = cursor_pos - curr_player_pos
+            local new_mouse_dir = cursor_pos - curr_player_pos
+            mouse_dir.x = new_mouse_dir.x
+            mouse_dir.y = new_mouse_dir.y
+            mouse_dir.z = new_mouse_dir.z
             local mouse_dir_len = mouse_dir:length()
             local clamped_len = lume.clamp(mouse_dir_len, mouse_dir_min_len, mouse_dir_max_len)
             local t = (clamped_len - mouse_dir_min_len) / (mouse_dir_max_len - mouse_dir_min_len)
@@ -208,6 +207,20 @@ function lovr.update(dt)
     updatePhysics(dt)
     -- Camera controls
     -- Easing of cam from slow to fast to allign camera azimut to player azimut
+
+    if w_just_pressed then
+        -- mouse_dir
+        local look_vector = cam.getLookVector()
+        look_vector.y = 0
+        local turn_angle = mouse_dir:angle(look_vector)
+        local cross_product = look_vector:cross(mouse_dir)
+        if cross_product.y > 0 then
+            cam_tween = tween.new(0.13, cam_tween_base, { value = -turn_angle }, tween.easing.inQuad)
+        else
+            cam_tween = tween.new(0.13, cam_tween_base, { value = turn_angle }, tween.easing.inQuad)
+        end
+        w_just_pressed = false
+    end
     if t_just_pressed then
         cam_tween = tween.new(0.13, cam_tween_base, { value = -math.pi / 4 }, tween.easing.inQuad)
         t_just_pressed = false
@@ -355,8 +368,7 @@ function lovr.keypressed(key)
     end
     if key == "t" then
         t_just_pressed = true
-        print("alo")
-        print(dbg.pretty({ a = 2, x = 44 }))
+        -- print(dbg.pretty({ a = 2, x = 44 }))
     end
     if key == "y" then
         y_just_pressed = true

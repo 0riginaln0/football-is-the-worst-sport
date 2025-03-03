@@ -82,6 +82,10 @@ local function newCam()
     m.nudge(0, 0, -dy * m.zoom_speed * 0.12)
   end
 
+  function m.getLookVector()
+    return m.center - m.position
+  end
+
   -- quick way to start using camera module - just call this function
   function m.integrate()
     local stub_fn = function() end

@@ -4,12 +4,12 @@ https://lovr.org/docs/Callbacks_and_Modules
 
 Windows
 ```shell
-lovrc .\lodr\ .
+lovrc .
 ```
 
 Linux
 ```shell
-lovr.AppImage lodr/ .
+lovr.AppImage .
 ```
 
 # Awesomeness:

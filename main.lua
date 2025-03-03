@@ -1,11 +1,11 @@
 -------------
 -- Imports --
 -------------
-local pprint = require 'utils.pprint'
 lovr.window = require 'utils.lovr-window'
 lovr.mouse = require 'utils.lovr-mouse'
 local math = require 'math'
 local lume = require 'utils.lume'
+-- local dbg = require 'utils.debugger'
 
 local newCam = require 'utils.cam'
 local cam = newCam()
@@ -108,11 +108,12 @@ function lovr.load()
     ball:setRestitution(0.7)
     ball:setFriction(0.7)
     ball:setMass(0.44)
+    ball:setContinuous(true)
 
     -- player
     player = world:newCapsuleCollider(player_pos, 0.4, 1.4)
     player:setOrientation(math.pi / 2, 2, 0, 0)
-    player:setMass(100)
+    player:setMass(10)
 
 
     -- Parsing cli arguments
@@ -131,10 +132,7 @@ function lovr.load()
     end
 end
 
-------------
--- Update --
-------------
-function lovr.update(dt)
+local function updatePhysics(dt)
     accumulator = accumulator + dt
     while accumulator >= const_dt do
         world:update(const_dt)
@@ -201,10 +199,13 @@ function lovr.update(dt)
             turn_cam.nudge()
         end
     end
+end
 
-
-
-
+------------
+-- Update --
+------------
+function lovr.update(dt)
+    updatePhysics(dt)
     -- Camera controls
     -- Easing of cam from slow to fast to allign camera azimut to player azimut
     if t_just_pressed then

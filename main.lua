@@ -5,7 +5,7 @@ lovr.window = require 'utils.lovr-window'
 lovr.mouse = require 'utils.lovr-mouse'
 local math = require 'math'
 local lume = require 'utils.lume'
--- local dbg = require 'utils.debugger'
+local dbg = require 'utils.debugger'
 
 local newCam = require 'utils.cam'
 local cam = newCam()
@@ -355,6 +355,8 @@ function lovr.keypressed(key)
     end
     if key == "t" then
         t_just_pressed = true
+        print("alo")
+        print(dbg.pretty({ a = 2, x = 44 }))
     end
     if key == "y" then
         y_just_pressed = true

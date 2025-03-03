@@ -215,9 +215,9 @@ function lovr.update(dt)
         local turn_angle = mouse_dir:angle(look_vector)
         local cross_product = look_vector:cross(mouse_dir)
         if cross_product.y > 0 then
-            cam_tween = tween.new(0.13, cam_tween_base, { value = -turn_angle }, tween.easing.inQuad)
+            cam_tween = tween.new(0.13, cam_tween_base, { value = -turn_angle }, tween.easing.inCirc)
         else
-            cam_tween = tween.new(0.13, cam_tween_base, { value = turn_angle }, tween.easing.inQuad)
+            cam_tween = tween.new(0.13, cam_tween_base, { value = turn_angle }, tween.easing.inCirc)
         end
         w_just_pressed = false
     end

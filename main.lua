@@ -38,15 +38,15 @@ local cursor = require 'utils.cursor'
 -- Constants & Variables --
 ---------------------------
 local world
-local const_dt = 0.01666666666 -- my constant dt
+local CONST_DT = 0.01666666666 -- my constant dt
 local accumulator = 0          -- accumulator of time to simulate
 
 local ground
 
 local ball
-local ball_radius = 0.25
-local init_ball_position = vec3(-1, 10, -1)
-local k = 0.001 -- Adjust this constant based on the desired curve effect
+local BALL_RADIUS = 0.25
+local INIT_BALL_POSITION = vec3(-1, 10, -1)
+local K = 0.001 -- Adjust this constant based on the desired curve effect
 
 local player
 local player_pos = Vec3(0, 0, 0)
@@ -67,8 +67,8 @@ local function calculateMagnusForce(ball)
     local magnusY = angular_vz * linear_vx - angular_vx * linear_vz
     local magnusZ = angular_vx * linear_vy - angular_vy * linear_vx
 
-    -- Scale the Magnus force by the constant k
-    return magnusX * k, magnusY * k, magnusZ * k
+    -- Scale the Magnus force by the constant K
+    return magnusX * K, magnusY * K, magnusZ * K
 end
 
 local function resetBallVelocity(ball)
@@ -104,7 +104,7 @@ function lovr.load()
     ground = world:newBoxCollider(vec3(0, -2, 0), vec3(90, 4, 120))
     ground:setKinematic(true)
     -- ball
-    ball = world:newSphereCollider(init_ball_position, ball_radius)
+    ball = world:newSphereCollider(INIT_BALL_POSITION, BALL_RADIUS)
     ball:setRestitution(0.7)
     ball:setFriction(0.7)
     ball:setMass(0.44)
@@ -134,9 +134,9 @@ end
 
 local function updatePhysics(dt)
     accumulator = accumulator + dt
-    while accumulator >= const_dt do
-        world:update(const_dt)
-        accumulator = accumulator - const_dt
+    while accumulator >= CONST_DT do
+        world:update(CONST_DT)
+        accumulator = accumulator - CONST_DT
 
         if space_just_pressed then
             ball:applyForce(0, 77, 0)
@@ -183,7 +183,7 @@ local function updatePhysics(dt)
             local t = (clamped_len - mouse_dir_min_len) / (mouse_dir_max_len - mouse_dir_min_len)
             local speed_magnitude = lume.smooth(player_min_speed, player_max_speed, t)
             local speed = mouse_dir:normalize() * speed_magnitude
-            player:setLinearVelocity(speed * const_dt)
+            player:setLinearVelocity(speed * CONST_DT)
             player:setOrientation(math.pi / 2, 2, 0, 0)
             local x, y, z = player:getPosition()
             player_pos.x = x

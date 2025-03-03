@@ -1,11 +1,11 @@
 -------------
 -- Imports --
 -------------
-lovr.window = require 'utils.lovr-window'
-lovr.mouse = require 'utils.lovr-mouse'
+lovr.window = require 'lib.lovr-window'
+lovr.mouse = require 'lib.lovr-mouse'
 local math = require 'math'
-local lume = require 'utils.lume'
-local dbg = require 'utils.debugger'
+local lume = require 'lib.lume'
+local dbg = require 'lib.debugger'
 
 local newCam = require 'utils.cam'
 local cam = newCam()
@@ -19,19 +19,19 @@ turn_cam.zoom_speed = cam.zoom_speed
 turn_cam.polar_upper = cam.polar_upper
 turn_cam.polar_lower = cam.polar_lower
 
-local tween = require 'utils.tween'
+local tween = require 'lib.tween'
 local cam_tween_base = { value = 0 }
 local cam_tween = nil
 local cam_prev_rad_dt = 0
 
 
-local phywire = require 'utils.phywire'
+local phywire = require 'lib.phywire'
 phywire.options.show_shapes = true     -- draw collider shapes (on by default)
 phywire.options.show_velocities = true -- vector showing direction and magnitude of collider linear velocity
 phywire.options.show_angulars = true   -- gizmo displaying the collider's angular velocity
 phywire.options.show_joints = true     -- show joints between colliders
 phywire.options.show_contacts = true   -- show collision contacts (quite inefficient, triples the needed collision computations)
-local cursor = require 'utils.cursor'
+local cursor = require 'lib.cursor'
 
 
 ---------------------------

@@ -35,9 +35,6 @@ The LOVR framework:
 Orbital camera for the LOVR:
 - https://github.com/jmiskovic/lovr-cam/blob/main/3rd-person-example/main.lua
 
-Live-reload for the LOVR:
-- https://github.com/mcclure/lodr
-
 Tweening library:
 - https://github.com/kikito/tween.lua
 

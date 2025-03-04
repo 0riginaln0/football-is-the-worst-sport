@@ -50,7 +50,7 @@ end
 
 -- Player
 local player
-local player_pos = Vec3(0, 0, 0)
+local PLAYER_INIT_POS = Vec3(0, 0, 0)
 local track_cursor = true
 local cursor_pos = Vec3(0, 0, 0)
 local mouse_dir = Vec3(0, 0, 0)
@@ -111,7 +111,7 @@ function lovr.load()
     ball:setContinuous(true)
 
     -- player
-    player = world:newCapsuleCollider(player_pos, 0.4, 1.4)
+    player = world:newCapsuleCollider(PLAYER_INIT_POS, 0.4, 1.4)
     player:setOrientation(math.pi / 2, 2, 0, 0)
     player:setMass(10)
 
@@ -185,12 +185,9 @@ local function updatePhysics(dt)
             player:setLinearVelocity(speed * CONST_DT)
             player:setOrientation(math.pi / 2, 2, 0, 0)
             local x, y, z = player:getPosition()
-            player_pos.x = x
-            player_pos.y = y
-            player_pos.z = z
-            cam.center.x = player_pos.x
-            cam.center.y = player_pos.y + cam_height
-            cam.center.z = player_pos.z
+            cam.center.x = x
+            cam.center.y = y + cam_height
+            cam.center.z = z
             turn_cam.center.x = cam.center.x
             turn_cam.center.y = cam.center.y
             turn_cam.center.z = cam.center.z
@@ -242,15 +239,19 @@ function lovr.update(dt)
     end
     if lovr.system.isKeyDown('q') then
         cam.nudge(-1 * dt)
+        turn_cam.nudge(-1 * dt)
     end
     if lovr.system.isKeyDown('e') then
         cam.nudge(1 * dt)
+        turn_cam.nudge(1 * dt)
     end
     if lovr.system.isKeyDown('z') then
         cam.nudge(0, -1 * dt)
+        turn_cam.nudge(0, -1 * dt)
     end
     if lovr.system.isKeyDown('c') then
         cam.nudge(0, 1 * dt)
+        turn_cam.nudge(0, 1 * dt)
     end
     if lovr.system.isKeyDown('b') then
         cam_height = cam_height + 1 * dt
@@ -260,9 +261,11 @@ function lovr.update(dt)
     end
     if lovr.system.isKeyDown('r') then
         cam.incrementFov(0.001)
+        turn_cam.incrementFov(0.001)
     end
     if lovr.system.isKeyDown('f') then
         cam.incrementFov(-0.001)
+        turn_cam.incrementFov(-0.001)
     end
 end
 
@@ -279,7 +282,7 @@ function lovr.draw(pass)
 
 
     pass:setColor(0x121212)
-    pass:plane(0, 0.01, 0, 90, 120, -math.pi / 2, 1, 0, 0, 'line', 90, 120)
+    -- pass:plane(0, 0.01, 0, 90, 120, -math.pi / 2, 1, 0, 0, 'line', 90, 120)
 
     phywire.draw(pass, world)
     if track_cursor then

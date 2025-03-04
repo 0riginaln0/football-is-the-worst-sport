@@ -20,6 +20,8 @@ local cursor = require 'utils.cursor'
 ---------------------------
 -- Constants & Variables --
 ---------------------------
+WINDOW_WIDTH, WINDOW_HEIGHT = lovr.system.getWindowDimensions()
+MOUSE_LOCK = false
 local world
 local CONST_DT = 0.01666666666 -- my constant dt
 local accumulator = 0          -- accumulator of time to simulate
@@ -202,10 +204,33 @@ local function updatePhysics(dt)
     end
 end
 
+
+local function lockMouse()
+    if MOUSE_LOCK then
+        local pad = 2
+        local x, y = lovr.mouse.getPosition()
+        if x < 0 + pad then
+            print('too left')
+            lovr.mouse.setX(pad)
+        elseif x > WINDOW_WIDTH - pad then
+            print('too right')
+            lovr.mouse.setX(WINDOW_WIDTH - pad)
+        end
+        if y < 0 + pad then
+            print('too high')
+            lovr.mouse.setY(pad)
+        elseif y > WINDOW_HEIGHT - pad then
+            print("too low")
+            lovr.mouse.setY(WINDOW_HEIGHT - pad)
+        end
+    end
+end
+
 ------------
 -- Update --
 ------------
 function lovr.update(dt)
+    lockMouse()
     updatePhysics(dt)
     -- Camera controls
     -- Easing of cam from slow to fast to allign camera azimut to player azimut
@@ -327,6 +352,7 @@ end
 -- Other Callbacks --
 ---------------------
 function lovr.resize(width, height)
+    WINDOW_WIDTH, WINDOW_HEIGHT = width, height
     cam.resize(width, height)
     turn_cam.resize(width, height)
 end
@@ -342,7 +368,8 @@ function lovr.keyreleased(key, scancode, repeating)
         lovr.window.setFullscreen(not fullscreen, fullscreentype or "exclusive")
     end
     if key == "f10" then
-        lovr.mouse.setRelativeMode(not lovr.mouse.getRelativeMode())
+        MOUSE_LOCK = not MOUSE_LOCK
+        -- lovr.mouse.setRelativeMode(not lovr.mouse.getRelativeMode())
     end
     if key == "g" then
         track_cursor = not track_cursor
@@ -387,17 +414,18 @@ function lovr.keypressed(key)
 end
 
 function lovr.mousemoved(x, y, dx, dy)
-    local width, height = lovr.system.getWindowDimensions()
-    if x < 0 then
-        lovr.mouse.setX(0)
-    elseif x > width then
-        lovr.mouse.setX(width)
-    end
-    if y < 0 then
-        lovr.mouse.setX(0)
-    elseif y > height then
-        lovr.mouse.setY(height)
-    end
-
-    print(x, y)
+    -- if x + dx < 0 then
+    --     print('too left')
+    --     lovr.mouse.setX(0)
+    -- elseif x + dx > WINDOW_WIDTH then
+    --     print('too right')
+    --     lovr.mouse.setX(WINDOW_WIDTH)
+    -- end
+    -- if y + dy < 0 then
+    --     print('too high')
+    --     lovr.mouse.setY(0)
+    -- elseif y + dy > WINDOW_HEIGHT then
+    --     print("too low")
+    --     lovr.mouse.setY(WINDOW_HEIGHT)
+    -- end
 end

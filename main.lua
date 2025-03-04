@@ -6,25 +6,8 @@ lovr.mouse = require 'lib.lovr-mouse'
 local math = require 'math'
 local lume = require 'lib.lume'
 local dbg = require 'lib.debugger'
-
 local newCam = require 'lib.cam'
-local cam = newCam()
-cam.zoom_speed = 10
-cam.polar_upper = 30 * 0.0174533
-cam.polar_lower = math.pi / 2 - cam.polar_upper
-local cam_height = 0
-
-local turn_cam = newCam()
-turn_cam.zoom_speed = cam.zoom_speed
-turn_cam.polar_upper = cam.polar_upper
-turn_cam.polar_lower = cam.polar_lower
-
 local tween = require 'lib.tween'
-local cam_tween_base = { value = 0 }
-local cam_tween = nil
-local cam_prev_rad_dt = 0
-
-
 local phywire = require 'lib.phywire'
 phywire.options.show_shapes = true     -- draw collider shapes (on by default)
 phywire.options.show_velocities = true -- vector showing direction and magnitude of collider linear velocity
@@ -43,11 +26,29 @@ local accumulator = 0          -- accumulator of time to simulate
 
 local ground
 
+-- Ball
 local ball
 local BALL_RADIUS = 0.25
 local INIT_BALL_POSITION = vec3(-1, 10, -1)
 local K = 0.001 -- Adjust this constant based on the desired curve effect
+local function calculateMagnusForce(ball)
+    -- Get the ball's spin (ω)
+    local angular_vx, angular_vy, angular_vz = ball:getAngularVelocity()
+    -- Get the ball's velocity (v)
+    local linear_vx, linear_vy, linear_vz = ball:getLinearVelocity()
+    -- Calculate the cross product ω × v
+    local magnusX = angular_vy * linear_vz - angular_vz * linear_vy
+    local magnusY = angular_vz * linear_vx - angular_vx * linear_vz
+    local magnusZ = angular_vx * linear_vy - angular_vy * linear_vx
+    -- Scale the Magnus force by the constant K
+    return magnusX * K, magnusY * K, magnusZ * K
+end
+local function resetBallVelocity(ball)
+    ball:setAngularVelocity(0, 0, 0)
+    ball:setLinearVelocity(0, 0, 0)
+end
 
+-- Player
 local player
 local player_pos = Vec3(0, 0, 0)
 local track_cursor = true
@@ -58,23 +59,22 @@ local player_min_speed = 0
 local mouse_dir_max_len = 7
 local mouse_dir_min_len = 0.5
 
-local function calculateMagnusForce(ball)
-    local angular_vx, angular_vy, angular_vz = ball:getAngularVelocity() -- Get the ball's spin (ω)
-    local linear_vx, linear_vy, linear_vz = ball:getLinearVelocity()     -- Get the ball's velocity (v)
+-- Cameras
+local cam = newCam()
+cam.zoom_speed = 10
+cam.polar_upper = 30 * 0.0174533
+cam.polar_lower = math.pi / 2 - cam.polar_upper
+local cam_height = 0
 
-    -- Calculate the cross product ω × v
-    local magnusX = angular_vy * linear_vz - angular_vz * linear_vy
-    local magnusY = angular_vz * linear_vx - angular_vx * linear_vz
-    local magnusZ = angular_vx * linear_vy - angular_vy * linear_vx
+local turn_cam = newCam()
+turn_cam.zoom_speed = cam.zoom_speed
+turn_cam.polar_upper = cam.polar_upper
+turn_cam.polar_lower = cam.polar_lower
 
-    -- Scale the Magnus force by the constant K
-    return magnusX * K, magnusY * K, magnusZ * K
-end
 
-local function resetBallVelocity(ball)
-    ball:setAngularVelocity(0, 0, 0)
-    ball:setLinearVelocity(0, 0, 0)
-end
+local cam_tween_base = { value = 0 }
+local cam_tween = nil
+local cam_prev_rad_dt = 0
 
 
 -----------
@@ -215,18 +215,18 @@ function lovr.update(dt)
         local turn_angle = mouse_dir:angle(look_vector)
         local cross_product = look_vector:cross(mouse_dir)
         if cross_product.y > 0 then
-            cam_tween = tween.new(0.13, cam_tween_base, { value = -turn_angle }, tween.easing.inCirc)
+            cam_tween = tween.new(0.13, cam_tween_base, { value = -turn_angle }, tween.easing.linear)
         else
-            cam_tween = tween.new(0.13, cam_tween_base, { value = turn_angle }, tween.easing.inCirc)
+            cam_tween = tween.new(0.13, cam_tween_base, { value = turn_angle }, tween.easing.linear)
         end
         w_just_pressed = false
     end
     if t_just_pressed then
-        cam_tween = tween.new(0.13, cam_tween_base, { value = -math.pi / 4 }, tween.easing.inQuad)
+        cam_tween = tween.new(0.13, cam_tween_base, { value = -math.pi / 4 }, tween.easing.linear)
         t_just_pressed = false
     end
     if y_just_pressed then
-        cam_tween = tween.new(0.13, cam_tween_base, { value = math.pi / 4 }, tween.easing.inQuad)
+        cam_tween = tween.new(0.13, cam_tween_base, { value = math.pi / 4 }, tween.easing.linear)
         y_just_pressed = false
     end
     if cam_tween then

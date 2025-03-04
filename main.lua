@@ -60,6 +60,13 @@ end
 
 -- Player
 local player
+local last_speed = Vec3(0, 0, 0)
+local player_timers = {
+   slide_start = 0,
+   slide_timeout = 2,
+   dive_start = 0,
+   dive_timeout = 1.5,
+}
 local player_fsm = machine.create {
    initial = 'running',
    events = {
@@ -74,8 +81,17 @@ local player_fsm = machine.create {
 
       { name = 'think',     from = 'running',  to = 'thinking' },
       { name = 'think_end', from = 'thinking', to = 'running' },
+   },
+   callbacks = {
+      onslide = function()
+         player_timers.slide_start = lovr.timer.getTime()
+      end,
+      ondive = function()
+         player_timers.dive_start = lovr.timer.getTime()
+      end,
    }
 }
+
 local PLAYER_INIT_POS = Vec3(0, 0, 0)
 local track_cursor = true
 local cursor_pos = Vec3(0, 0, 0)
@@ -177,13 +193,15 @@ local function updatePlayerPhysics()
       local t = (clamped_len - mouse_dir_min_len) / (mouse_dir_max_len - mouse_dir_min_len)
       local speed_magnitude = lume.smooth(player_min_speed, player_max_speed, t)
       local speed = mouse_dir:normalize() * speed_magnitude
+      last_speed.x, last_speed.y, last_speed.z = speed.x, speed.y, speed.z
       player:setLinearVelocity(speed * CONST_DT)
       player:setOrientation(math.pi / 2, 2, 0, 0)
    elseif player_fsm:is "sliding" then
    elseif player_fsm:is "diving" then
    elseif player_fsm:is "jumping" then
    elseif player_fsm:is "thinking" then
-
+      player:setLinearVelocity(last_speed * CONST_DT)
+      player:setOrientation(math.pi / 2, 2, 0, 0)
    end
 end
 local function updatePlayer()
@@ -198,10 +216,20 @@ local function updatePlayer()
          player_fsm:think()
       end
    elseif player_fsm:is "sliding" then
+      local time = lovr.timer.getTime()
+      if time - player_timers.slide_start > player_timers.slide_timeout then
+         player_fsm:slide_end()
+      end
    elseif player_fsm:is "diving" then
+      local time = lovr.timer.getTime()
+      if time - player_timers.dive_start > player_timers.dive_timeout then
+         player_fsm:dive_end()
+      end
    elseif player_fsm:is "jumping" then
    elseif player_fsm:is "thinking" then
-
+      if (not lovr.mouse.isDown(SHOT_KEY)) and (not lovr.mouse.isDown(FAST_SHOT_KEY)) then
+         player_fsm:think_end()
+      end
    end
 end
 

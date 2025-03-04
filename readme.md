@@ -24,7 +24,6 @@ The LOVR framework:
 - https://lovr.org/
 - https://github.com/bjornbytes/lovr
 
-
 Orbital camera for the LOVR:
 - https://github.com/jmiskovic/lovr-cam/blob/main/3rd-person-example/main.lua
 
@@ -34,6 +33,21 @@ Tweening library:
 Lua functions geared towards gamedev:
 - https://github.com/rxi/lume
 
+Finite State Machine:
+- https://github.com/kyleconroy/lua-state-machine
+
+Visualize physics:
+- https://github.com/jmiskovic/lovr-phywire
+
+Mouse and window libs for LOVR:
+- https://github.com/bjornbytes/lovr-mouse
+- https://github.com/Papaew/lovr-window
+
+Json library:
+- https://github.com/rxi/json.lua
+
+Embeddable debugger:
+- https://github.com/slembcke/debugger.lua
 
 Misc:
 

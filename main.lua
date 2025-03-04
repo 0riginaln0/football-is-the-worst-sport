@@ -59,6 +59,8 @@ local player_min_speed = 0
 local mouse_dir_max_len = 7
 local mouse_dir_min_len = 0.5
 
+
+
 -- Cameras
 local cam = newCam()
 cam.zoom_speed = 10
@@ -130,6 +132,9 @@ function lovr.load()
             heartbeat_file:close()
         end
     end
+
+    MY_CURSOR = lovr.mouse.newCursor('res/cursor.png', 20, 20)
+    lovr.mouse.setCursor(MY_CURSOR)
 end
 
 local function updatePhysics(dt)
@@ -379,4 +384,20 @@ function lovr.keypressed(key)
     if key == '0' then
         print(lovr.timer.getFPS())
     end
+end
+
+function lovr.mousemoved(x, y, dx, dy)
+    local width, height = lovr.system.getWindowDimensions()
+    if x < 0 then
+        lovr.mouse.setX(0)
+    elseif x > width then
+        lovr.mouse.setX(width)
+    end
+    if y < 0 then
+        lovr.mouse.setX(0)
+    elseif y > height then
+        lovr.mouse.setY(height)
+    end
+
+    print(x, y)
 end

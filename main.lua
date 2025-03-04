@@ -61,11 +61,15 @@ end
 -- Player
 local player
 local last_speed = Vec3(0, 0, 0)
+local jumped = false
+local player_speed = 10
 local player_timers = {
    slide_start = 0,
    slide_timeout = 2,
    dive_start = 0,
    dive_timeout = 1.5,
+   jump_start = 0,
+   jump_start_enough = 1
 }
 local player_fsm = machine.create {
    initial = 'running',
@@ -89,6 +93,9 @@ local player_fsm = machine.create {
       ondive = function()
          player_timers.dive_start = lovr.timer.getTime()
       end,
+      onjump = function()
+         player_timers.jump_start = lovr.timer.getTime()
+      end
    }
 }
 
@@ -134,6 +141,7 @@ local x_just_pressed = false
 local v_just_pressed = false
 local t_just_pressed = false
 local y_just_pressed = false
+
 
 
 ----------
@@ -183,7 +191,6 @@ end
 local function updatePlayerPhysics()
    if player_fsm:is "running" then
       local curr_player_pos = vec3(player:getPosition())
-      curr_player_pos.y = 0
       local new_mouse_dir = cursor_pos - curr_player_pos
       mouse_dir.x = new_mouse_dir.x
       mouse_dir.y = new_mouse_dir.y
@@ -194,11 +201,19 @@ local function updatePlayerPhysics()
       local speed_magnitude = lume.smooth(player_min_speed, player_max_speed, t)
       local speed = mouse_dir:normalize() * speed_magnitude
       last_speed.x, last_speed.y, last_speed.z = speed.x, speed.y, speed.z
-      player:setLinearVelocity(speed * CONST_DT)
+
+      local _, vy, _ = player:getLinearVelocity()
+      player:setLinearVelocity(0, vy, 0)
+      player:applyLinearImpulse(player_speed * speed * CONST_DT)
       player:setOrientation(math.pi / 2, 2, 0, 0)
    elseif player_fsm:is "sliding" then
    elseif player_fsm:is "diving" then
    elseif player_fsm:is "jumping" then
+      if not jumped then
+         player:applyLinearImpulse(0, 50, 0)
+         jumped = true
+      end
+      player:setOrientation(math.pi / 2, 2, 0, 0)
    elseif player_fsm:is "thinking" then
       player:setLinearVelocity(last_speed * CONST_DT)
       player:setOrientation(math.pi / 2, 2, 0, 0)
@@ -226,6 +241,15 @@ local function updatePlayer()
          player_fsm:dive_end()
       end
    elseif player_fsm:is "jumping" then
+      local _, y, _ = player:getPosition()
+      local time = lovr.timer.getTime()
+
+      if jumped and (time - player_timers.jump_start > player_timers.jump_start_enough) then
+         if jumped and y < 1.11 then
+            player_fsm:jump_end()
+            jumped = false
+         end
+      end
    elseif player_fsm:is "thinking" then
       if (not lovr.mouse.isDown(SHOT_KEY)) and (not lovr.mouse.isDown(FAST_SHOT_KEY)) then
          player_fsm:think_end()
@@ -381,7 +405,7 @@ function lovr.draw(pass)
 
 
    pass:setColor(0x121212)
-   -- pass:plane(0, 0.01, 0, 90, 120, -math.pi / 2, 1, 0, 0, 'line', 90, 120)
+   pass:plane(0, 0.01, 0, 90, 120, -math.pi / 2, 1, 0, 0, 'line', 45, 60)
 
    phywire.draw(pass, world)
    if track_cursor then
@@ -483,18 +507,5 @@ function lovr.keypressed(key)
 end
 
 function lovr.mousemoved(x, y, dx, dy)
-   -- if x + dx < 0 then
-   --     print('too left')
-   --     lovr.mouse.setX(0)
-   -- elseif x + dx > WINDOW_WIDTH then
-   --     print('too right')
-   --     lovr.mouse.setX(WINDOW_WIDTH)
-   -- end
-   -- if y + dy < 0 then
-   --     print('too high')
-   --     lovr.mouse.setY(0)
-   -- elseif y + dy > WINDOW_HEIGHT then
-   --     print("too low")
-   --     lovr.mouse.setY(WINDOW_HEIGHT)
-   -- end
+
 end

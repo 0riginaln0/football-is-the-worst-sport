@@ -15,11 +15,19 @@ phywire.options.show_angulars = true   -- gizmo displaying the collider's angula
 phywire.options.show_joints = true     -- show joints between colliders
 phywire.options.show_contacts = true   -- show collision contacts (quite inefficient, triples the needed collision computations)
 local cursor = require 'utils.cursor'
+local machine = require 'lib.statemachine'
 
 
 ---------------------------
 -- Constants & Variables --
 ---------------------------
+SLIDE_KEY = "a"
+DIVE_KEY = "s"
+JUMP_KEY = "d"
+SHOT_KEY = 1
+FAST_SHOT_KEY = 2
+
+
 WINDOW_WIDTH, WINDOW_HEIGHT = lovr.system.getWindowDimensions()
 MOUSE_LOCK = false
 local world
@@ -52,6 +60,22 @@ end
 
 -- Player
 local player
+local player_fsm = machine.create {
+   initial = 'running',
+   events = {
+      { name = 'dive',      from = 'running',  to = 'diving' },
+      { name = 'dive_end',  from = 'diving',   to = 'running' },
+
+      { name = 'jump',      from = 'running',  to = 'jumping' },
+      { name = 'jump_end',  from = 'jumping',  to = 'running' },
+
+      { name = 'slide',     from = 'running',  to = 'sliding' },
+      { name = 'slide_end', from = 'sliding',  to = 'running' },
+
+      { name = 'think',     from = 'running',  to = 'thinking' },
+      { name = 'think_end', from = 'thinking', to = 'running' },
+   }
+}
 local PLAYER_INIT_POS = Vec3(0, 0, 0)
 local track_cursor = true
 local cursor_pos = Vec3(0, 0, 0)
@@ -60,6 +84,7 @@ local player_max_speed = 500
 local player_min_speed = 0
 local mouse_dir_max_len = 7
 local mouse_dir_min_len = 0.5
+
 
 
 
@@ -122,7 +147,7 @@ function lovr.load()
 
    -- Parsing cli arguments
    for _, value in pairs(arg) do
-      if value == '--hb' then   -- Enable heartbeat
+      if value == '--hb' then -- Enable heartbeat
          local heartbeat_file = io.open("heartbeat.lua", 'r')
          if not heartbeat_file then
             print("no hearbeat.lua file found")
@@ -139,6 +164,59 @@ function lovr.load()
    lovr.mouse.setCursor(MY_CURSOR)
 end
 
+local function updatePlayerPhysics()
+   if player_fsm:is "running" then
+      local curr_player_pos = vec3(player:getPosition())
+      curr_player_pos.y = 0
+      local new_mouse_dir = cursor_pos - curr_player_pos
+      mouse_dir.x = new_mouse_dir.x
+      mouse_dir.y = new_mouse_dir.y
+      mouse_dir.z = new_mouse_dir.z
+      local mouse_dir_len = mouse_dir:length()
+      local clamped_len = lume.clamp(mouse_dir_len, mouse_dir_min_len, mouse_dir_max_len)
+      local t = (clamped_len - mouse_dir_min_len) / (mouse_dir_max_len - mouse_dir_min_len)
+      local speed_magnitude = lume.smooth(player_min_speed, player_max_speed, t)
+      local speed = mouse_dir:normalize() * speed_magnitude
+      player:setLinearVelocity(speed * CONST_DT)
+      player:setOrientation(math.pi / 2, 2, 0, 0)
+   elseif player_fsm:is "sliding" then
+   elseif player_fsm:is "diving" then
+   elseif player_fsm:is "jumping" then
+   elseif player_fsm:is "thinking" then
+
+   end
+end
+local function updatePlayer()
+   if player_fsm:is "running" then
+      if lovr.system.wasKeyPressed(SLIDE_KEY) then
+         player_fsm:slide()
+      elseif lovr.system.wasKeyPressed(DIVE_KEY) then
+         player_fsm:dive()
+      elseif lovr.system.wasKeyPressed(JUMP_KEY) then
+         player_fsm:jump()
+      elseif lovr.mouse.isDown(SHOT_KEY) or lovr.mouse.isDown(FAST_SHOT_KEY) then
+         player_fsm:think()
+      end
+   elseif player_fsm:is "sliding" then
+   elseif player_fsm:is "diving" then
+   elseif player_fsm:is "jumping" then
+   elseif player_fsm:is "thinking" then
+
+   end
+end
+
+local function updateCams()
+   local x, y, z = player:getPosition()
+   cam.center.x = x
+   cam.center.y = y + cam_height
+   cam.center.z = z
+   turn_cam.center.x = cam.center.x
+   turn_cam.center.y = cam.center.y
+   turn_cam.center.z = cam.center.z
+   cam.nudge()
+   turn_cam.nudge()
+end
+
 local function updatePhysics(dt)
    accumulator = accumulator + dt
    while accumulator >= CONST_DT do
@@ -148,18 +226,6 @@ local function updatePhysics(dt)
       if space_just_pressed then
          ball:applyForce(0, 77, 0)
          space_just_pressed = false
-      end
-      if a_just_pressed then
-         ball:applyTorque(0, 0, -1)
-         a_just_pressed = false
-      end
-      if s_just_pressed then
-         ball:applyTorque(-1, 0, 0)
-         s_just_pressed = false
-      end
-      if d_just_pressed then
-         ball:applyTorque(0, 0, 1)
-         d_just_pressed = false
       end
       if x_just_pressed then
          resetBallVelocity(ball)
@@ -174,34 +240,12 @@ local function updatePhysics(dt)
          v_just_pressed = false
       end
       local magnusX, magnusY, magnusZ = calculateMagnusForce(ball)
-      ball:applyForce(magnusX, magnusY, magnusZ)   -- Apply the Magnus force
+      ball:applyForce(magnusX, magnusY, magnusZ) -- Apply the Magnus force
 
-      -- Player movement
-      if track_cursor then
-         local curr_player_pos = vec3(player:getPosition())
-         curr_player_pos.y = 0
-         local new_mouse_dir = cursor_pos - curr_player_pos
-         mouse_dir.x = new_mouse_dir.x
-         mouse_dir.y = new_mouse_dir.y
-         mouse_dir.z = new_mouse_dir.z
-         local mouse_dir_len = mouse_dir:length()
-         local clamped_len = lume.clamp(mouse_dir_len, mouse_dir_min_len, mouse_dir_max_len)
-         local t = (clamped_len - mouse_dir_min_len) / (mouse_dir_max_len - mouse_dir_min_len)
-         local speed_magnitude = lume.smooth(player_min_speed, player_max_speed, t)
-         local speed = mouse_dir:normalize() * speed_magnitude
-         player:setLinearVelocity(speed * CONST_DT)
-         player:setOrientation(math.pi / 2, 2, 0, 0)
-         local x, y, z = player:getPosition()
-         cam.center.x = x
-         cam.center.y = y + cam_height
-         cam.center.z = z
-         turn_cam.center.x = cam.center.x
-         turn_cam.center.y = cam.center.y
-         turn_cam.center.z = cam.center.z
-         cam.nudge()
-         turn_cam.nudge()
-      end
+      updatePlayerPhysics()
+      updateCams()
    end
+   updatePlayer()
 end
 
 
@@ -221,6 +265,7 @@ local function lockMouse()
       end
    end
 end
+
 
 ------------
 -- Update --

@@ -188,6 +188,8 @@ function lovr.load()
    lovr.mouse.setCursor(MY_CURSOR)
 end
 
+local player_effective_dir = Vec3(0, 0, 0)
+
 local function updatePlayerPhysics()
    if player_fsm:is "running" then
       local curr_player_pos = vec3(player:getPosition())
@@ -204,7 +206,8 @@ local function updatePlayerPhysics()
 
       local _, vy, _ = player:getLinearVelocity()
       player:setLinearVelocity(0, vy, 0)
-      player:applyLinearImpulse(player_speed * speed * CONST_DT)
+      player_effective_dir:lerp(player_speed * speed, 0.1) -- Lower -> smoother
+      player:applyLinearImpulse(player_effective_dir * CONST_DT)
       player:setOrientation(math.pi / 2, 2, 0, 0)
    elseif player_fsm:is "sliding" then
    elseif player_fsm:is "diving" then

@@ -49,6 +49,9 @@ Json library:
 Embeddable debugger:
 - https://github.com/slembcke/debugger.lua
 
+A tutorial on how to move a character smoothly:
+- https://youtu.be/ifETf6bNxrs?si=IRBJOuiWNP6cN3hO
+
 Misc:
 
 - https://us.select-sport.com/pages/size-chart-soccer-balls

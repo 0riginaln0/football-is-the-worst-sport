@@ -105,7 +105,7 @@ local cursor_pos = Vec3(0, 0, 0)
 local mouse_dir = Vec3(0, 0, 0)
 local player_max_speed = 500
 local player_min_speed = 0
-local mouse_dir_max_len = 7
+local mouse_dir_max_len = 5
 local mouse_dir_min_len = 0.5
 
 
@@ -206,7 +206,7 @@ local function updatePlayerPhysics()
 
       local _, vy, _ = player:getLinearVelocity()
       player:setLinearVelocity(0, vy, 0)
-      player_effective_dir:lerp(player_speed * speed, 0.1) -- Lower -> smoother
+      player_effective_dir:lerp(player_speed * speed, 0.169) -- Lower -> smoother
       player:applyLinearImpulse(player_effective_dir * CONST_DT)
       player:setOrientation(math.pi / 2, 2, 0, 0)
    elseif player_fsm:is "sliding" then

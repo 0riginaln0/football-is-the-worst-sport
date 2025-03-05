@@ -106,7 +106,7 @@ local mouse_dir = Vec3(0, 0, 0)
 local player_max_speed = 500
 local player_min_speed = 0
 local mouse_dir_max_len = 5
-local mouse_dir_min_len = 0.5
+local mouse_dir_min_len = 1
 
 
 
@@ -344,13 +344,22 @@ function lovr.update(dt)
       end
       w_just_pressed = false
    end
-   if t_just_pressed then
-      cam_tween = tween.new(0.13, cam_tween_base, { value = -math.pi / 4 }, tween.easing.linear)
-      t_just_pressed = false
+   -- For further looking around
+   -- if t_just_pressed then
+   --    cam_tween = tween.new(0.13, cam_tween_base, { value = -math.pi / 4 }, tween.easing.linear)
+   --    t_just_pressed = false
+   -- end
+   -- if y_just_pressed then
+   --    cam_tween = tween.new(0.13, cam_tween_base, { value = math.pi / 4 }, tween.easing.linear)
+   --    y_just_pressed = false
+   -- end
+   if lovr.system.isKeyDown('t') then
+      cam.wheelmoved(0, -0.05)
+      turn_cam.wheelmoved(0, -0.05)
    end
-   if y_just_pressed then
-      cam_tween = tween.new(0.13, cam_tween_base, { value = math.pi / 4 }, tween.easing.linear)
-      y_just_pressed = false
+   if lovr.system.isKeyDown('y') then
+      cam.wheelmoved(0, 0.05)
+      turn_cam.wheelmoved(0, 0.05)
    end
    if cam_tween then
       local complete = cam_tween:update(dt)
@@ -461,7 +470,7 @@ end
 function lovr.keyreleased(key, scancode, repeating)
    if key == "f11" then
       local fullscreen, fullscreentype = lovr.window.getFullscreen()
-      lovr.window.setFullscreen(not fullscreen, fullscreentype or "exclusive")
+      lovr.window.setFullscreen(not fullscreen, fullscreentype or "desktop")
    end
    if key == "f10" then
       MOUSE_LOCK = not MOUSE_LOCK
@@ -481,15 +490,6 @@ function lovr.keypressed(key)
    end
    if key == "w" then
       w_just_pressed = true
-   end
-   if key == "a" then
-      a_just_pressed = true
-   end
-   if key == "s" then
-      s_just_pressed = true
-   end
-   if key == "d" then
-      d_just_pressed = true
    end
    if key == "x" then
       x_just_pressed = true

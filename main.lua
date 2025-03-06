@@ -226,14 +226,9 @@ local function updatePlayerPhysics()
          mouse_dir.x = new_mouse_dir.x
          mouse_dir.y = new_mouse_dir.y
          mouse_dir.z = new_mouse_dir.z
-         local mouse_dir_len = mouse_dir:length()
-         local clamped_len = lume.clamp(mouse_dir_len, mouse_dir_min_len, mouse_dir_max_len)
-         local t = (clamped_len - mouse_dir_min_len) / (mouse_dir_max_len - mouse_dir_min_len)
-         local vel_magnitude = lume.smooth(player_min_speed, player_max_speed, t)
-         local velocity = mouse_dir:normalize() * vel_magnitude
-
-         local _, vy, _ = player:getLinearVelocity()
-         player:setLinearVelocity(0, vy, 0)
+         local v = vec3(player:getLinearVelocity())
+         player:setLinearVelocity(0, v.y, 0)
+         local velocity = mouse_dir:normalize() * last_vel:length()
          player:applyLinearImpulse(player_speed * velocity * CONST_DT)
          player:setOrientation(math.pi / 2, 2, 0, 0)
          player:applyLinearImpulse(0, 50, 0)

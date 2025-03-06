@@ -147,7 +147,7 @@ local y_just_pressed = false
 ----------
 function lovr.load()
    lovr.graphics.setBackgroundColor(0x87ceeb)
-   world = lovr.physics.newWorld(0, -9.81, 0, false)
+   world = lovr.physics.newWorld({ tags = { "ground", "ball", "player" } })
    -- world:setAngularDamping(0.009)
    -- world:setLinearDamping(0.001)
 
@@ -155,6 +155,7 @@ function lovr.load()
    ground = world:newBoxCollider(vec3(0, -2, 0), vec3(90, 4, 120))
    ground:setFriction(0.2)
    ground:setKinematic(true)
+   ground:setTag("ground")
    -- ball
    ball = world:newSphereCollider(INIT_BALL_POSITION, BALL_RADIUS)
    ball:setRestitution(0.7)
@@ -163,11 +164,13 @@ function lovr.load()
    ball:setAngularDamping(0.1)
    ball:setMass(0.44)
    ball:setContinuous(true)
+   ball:setTag("ball")
 
    -- player
    player = world:newCapsuleCollider(PLAYER_INIT_POS, 0.4, 1.4)
    player:setOrientation(math.pi / 2, 2, 0, 0)
    player:setMass(10)
+   player:setTag("player")
 
 
    -- Parsing cli arguments
@@ -249,10 +252,18 @@ local function updatePlayer()
          player_fsm:dive_end()
       end
    elseif player_fsm:is "jumping" then
-      local _, y, _ = player:getPosition()
+      local p_shape = player:getShape()
+      local x, y, z, angle, ax, ay, az = player:getPose()
+      local ground_hit = world:overlapShape(p_shape, x, y, z, angle, ax, ay, az, 0.0001, "ground")
+      if ground_hit then
+         print("hit the ground")
+      else
+         print("flying")
+      end
+
       local time = lovr.timer.getTime()
       if jumped and (time - player_timers.jump_start > player_timers.jump_start_enough) then
-         if jumped and y < 1.11 then
+         if ground_hit then
             player_fsm:jump_end()
             jumped = false
          end

@@ -60,7 +60,7 @@ end
 
 -- Player
 local player
-local last_speed = Vec3(0, 0, 0)
+local last_vel = Vec3(0, 0, 0)
 local jumped = false
 local player_speed = 10
 local player_timers = {
@@ -69,7 +69,7 @@ local player_timers = {
    dive_start = 0,
    dive_timeout = 1.5,
    jump_start = 0,
-   jump_start_enough = 1
+   jump_start_enough = 0.5
 }
 local shot_key_down = false
 local shot_key_released = false
@@ -204,18 +204,17 @@ local function updatePlayerPhysics()
       local mouse_dir_len = mouse_dir:length()
       local clamped_len = lume.clamp(mouse_dir_len, mouse_dir_min_len, mouse_dir_max_len)
       local t = (clamped_len - mouse_dir_min_len) / (mouse_dir_max_len - mouse_dir_min_len)
-      local speed_magnitude = lume.smooth(player_min_speed, player_max_speed, t)
-      local speed = mouse_dir:normalize() * speed_magnitude
-
+      local vel_magnitude = lume.smooth(player_min_speed, player_max_speed, t)
+      local velocity = mouse_dir:normalize() * vel_magnitude
 
       local _, vy, _ = player:getLinearVelocity()
       if shot_key_down or fast_shot_key_down then
-         player:setLinearVelocity(last_speed * CONST_DT)
+         -- player:setLinearVelocity(last_vel * CONST_DT)
          player:setOrientation(math.pi / 2, 2, 0, 0)
       else
-         last_speed.x, last_speed.y, last_speed.z = speed.x, speed.y, speed.z
+         last_vel.x, last_vel.y, last_vel.z = velocity.x, velocity.y, velocity.z
          player:setLinearVelocity(0, vy, 0)
-         player_effective_dir:lerp(player_speed * speed, 0.169) -- Lower -> smoother
+         player_effective_dir:lerp(player_speed * velocity, 0.169) -- Lower -> smoother
          player:applyLinearImpulse(player_effective_dir * CONST_DT)
          player:setOrientation(math.pi / 2, 2, 0, 0)
       end
@@ -223,6 +222,21 @@ local function updatePlayerPhysics()
    elseif player_fsm:is "diving" then
    elseif player_fsm:is "jumping" then
       if not jumped then
+         local curr_player_pos = vec3(player:getPosition())
+         local new_mouse_dir = cursor_pos - curr_player_pos
+         mouse_dir.x = new_mouse_dir.x
+         mouse_dir.y = new_mouse_dir.y
+         mouse_dir.z = new_mouse_dir.z
+         local mouse_dir_len = mouse_dir:length()
+         local clamped_len = lume.clamp(mouse_dir_len, mouse_dir_min_len, mouse_dir_max_len)
+         local t = (clamped_len - mouse_dir_min_len) / (mouse_dir_max_len - mouse_dir_min_len)
+         local vel_magnitude = lume.smooth(player_min_speed, player_max_speed, t)
+         local velocity = mouse_dir:normalize() * vel_magnitude
+
+         local _, vy, _ = player:getLinearVelocity()
+         player:setLinearVelocity(0, vy, 0)
+         player:applyLinearImpulse(player_speed * velocity * CONST_DT)
+         player:setOrientation(math.pi / 2, 2, 0, 0)
          player:applyLinearImpulse(0, 50, 0)
          jumped = true
       end
@@ -254,13 +268,7 @@ local function updatePlayer()
    elseif player_fsm:is "jumping" then
       local p_shape = player:getShape()
       local x, y, z, angle, ax, ay, az = player:getPose()
-      local ground_hit = world:overlapShape(p_shape, x, y, z, angle, ax, ay, az, 0.0001, "ground")
-      if ground_hit then
-         print("hit the ground")
-      else
-         print("flying")
-      end
-
+      local ground_hit = world:overlapShape(p_shape, x, y, z, angle, ax, ay, az, 0.1, "ground")
       local time = lovr.timer.getTime()
       if jumped and (time - player_timers.jump_start > player_timers.jump_start_enough) then
          if ground_hit then
@@ -339,11 +347,8 @@ end
 function lovr.update(dt)
    lockMouse()
    updatePhysics(dt)
-   -- Camera controls
-   -- Easing of cam from slow to fast to allign camera azimut to player azimut
 
    if w_just_pressed then
-      -- mouse_dir
       local look_vector = cam.getLookVector()
       look_vector.y = 0
       local turn_angle = mouse_dir:angle(look_vector)
@@ -355,15 +360,6 @@ function lovr.update(dt)
       end
       w_just_pressed = false
    end
-   -- For further looking around
-   -- if t_just_pressed then
-   --    cam_tween = tween.new(0.13, cam_tween_base, { value = -math.pi / 4 }, tween.easing.linear)
-   --    t_just_pressed = false
-   -- end
-   -- if y_just_pressed then
-   --    cam_tween = tween.new(0.13, cam_tween_base, { value = math.pi / 4 }, tween.easing.linear)
-   --    y_just_pressed = false
-   -- end
    if lovr.system.isKeyDown('t') then
       cam.wheelmoved(0, -0.05)
       turn_cam.wheelmoved(0, -0.05)

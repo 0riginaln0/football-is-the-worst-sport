@@ -209,7 +209,6 @@ local function updatePlayerPhysics()
 
       local _, vy, _ = player:getLinearVelocity()
       if shot_key_down or fast_shot_key_down then
-         -- player:setLinearVelocity(last_vel * CONST_DT)
          player:setOrientation(math.pi / 2, 2, 0, 0)
       else
          last_vel.x, last_vel.y, last_vel.z = velocity.x, velocity.y, velocity.z

@@ -71,20 +71,21 @@ local player_timers = {
    jump_start = 0,
    jump_start_enough = 1
 }
+local shot_key_down = false
+local shot_key_released = false
+local fast_shot_key_down = false
+local shot_charge = 0
 local player_fsm = machine.create {
    initial = 'running',
    events = {
-      { name = 'dive',      from = 'running',  to = 'diving' },
-      { name = 'dive_end',  from = 'diving',   to = 'running' },
+      { name = 'dive',      from = 'running', to = 'diving' },
+      { name = 'dive_end',  from = 'diving',  to = 'running' },
 
-      { name = 'jump',      from = 'running',  to = 'jumping' },
-      { name = 'jump_end',  from = 'jumping',  to = 'running' },
+      { name = 'jump',      from = 'running', to = 'jumping' },
+      { name = 'jump_end',  from = 'jumping', to = 'running' },
 
-      { name = 'slide',     from = 'running',  to = 'sliding' },
-      { name = 'slide_end', from = 'sliding',  to = 'running' },
-
-      { name = 'think',     from = 'running',  to = 'thinking' },
-      { name = 'think_end', from = 'thinking', to = 'running' },
+      { name = 'slide',     from = 'running', to = 'sliding' },
+      { name = 'slide_end', from = 'sliding', to = 'running' },
    },
    callbacks = {
       onslide = function()
@@ -106,7 +107,7 @@ local mouse_dir = Vec3(0, 0, 0)
 local player_max_speed = 500
 local player_min_speed = 0
 local mouse_dir_max_len = 5
-local mouse_dir_min_len = 1
+local mouse_dir_min_len = 1.5
 
 
 
@@ -134,9 +135,6 @@ local cam_prev_rad_dt = 0
 -----------
 local space_just_pressed = false
 local w_just_pressed = false
-local a_just_pressed = false
-local s_just_pressed = false
-local d_just_pressed = false
 local x_just_pressed = false
 local v_just_pressed = false
 local t_just_pressed = false
@@ -150,16 +148,19 @@ local y_just_pressed = false
 function lovr.load()
    lovr.graphics.setBackgroundColor(0x87ceeb)
    world = lovr.physics.newWorld(0, -9.81, 0, false)
-   world:setAngularDamping(0.009)
-   world:setLinearDamping(0.001)
+   -- world:setAngularDamping(0.009)
+   -- world:setLinearDamping(0.001)
 
    -- ground plane
    ground = world:newBoxCollider(vec3(0, -2, 0), vec3(90, 4, 120))
+   ground:setFriction(0.2)
    ground:setKinematic(true)
    -- ball
    ball = world:newSphereCollider(INIT_BALL_POSITION, BALL_RADIUS)
    ball:setRestitution(0.7)
    ball:setFriction(0.7)
+   ball:setLinearDamping(0.1)
+   ball:setAngularDamping(0.1)
    ball:setMass(0.44)
    ball:setContinuous(true)
 
@@ -202,13 +203,19 @@ local function updatePlayerPhysics()
       local t = (clamped_len - mouse_dir_min_len) / (mouse_dir_max_len - mouse_dir_min_len)
       local speed_magnitude = lume.smooth(player_min_speed, player_max_speed, t)
       local speed = mouse_dir:normalize() * speed_magnitude
-      last_speed.x, last_speed.y, last_speed.z = speed.x, speed.y, speed.z
+
 
       local _, vy, _ = player:getLinearVelocity()
-      player:setLinearVelocity(0, vy, 0)
-      player_effective_dir:lerp(player_speed * speed, 0.169) -- Lower -> smoother
-      player:applyLinearImpulse(player_effective_dir * CONST_DT)
-      player:setOrientation(math.pi / 2, 2, 0, 0)
+      if shot_key_down or fast_shot_key_down then
+         player:setLinearVelocity(last_speed * CONST_DT)
+         player:setOrientation(math.pi / 2, 2, 0, 0)
+      else
+         last_speed.x, last_speed.y, last_speed.z = speed.x, speed.y, speed.z
+         player:setLinearVelocity(0, vy, 0)
+         player_effective_dir:lerp(player_speed * speed, 0.169) -- Lower -> smoother
+         player:applyLinearImpulse(player_effective_dir * CONST_DT)
+         player:setOrientation(math.pi / 2, 2, 0, 0)
+      end
    elseif player_fsm:is "sliding" then
    elseif player_fsm:is "diving" then
    elseif player_fsm:is "jumping" then
@@ -217,12 +224,12 @@ local function updatePlayerPhysics()
          jumped = true
       end
       player:setOrientation(math.pi / 2, 2, 0, 0)
-   elseif player_fsm:is "thinking" then
-      player:setLinearVelocity(last_speed * CONST_DT)
-      player:setOrientation(math.pi / 2, 2, 0, 0)
    end
 end
+
 local function updatePlayer()
+   shot_key_down      = lovr.mouse.isDown(SHOT_KEY)
+   fast_shot_key_down = lovr.mouse.isDown(FAST_SHOT_KEY)
    if player_fsm:is "running" then
       if lovr.system.wasKeyPressed(SLIDE_KEY) then
          player_fsm:slide()
@@ -230,8 +237,6 @@ local function updatePlayer()
          player_fsm:dive()
       elseif lovr.system.wasKeyPressed(JUMP_KEY) then
          player_fsm:jump()
-      elseif lovr.mouse.isDown(SHOT_KEY) or lovr.mouse.isDown(FAST_SHOT_KEY) then
-         player_fsm:think()
       end
    elseif player_fsm:is "sliding" then
       local time = lovr.timer.getTime()
@@ -246,16 +251,11 @@ local function updatePlayer()
    elseif player_fsm:is "jumping" then
       local _, y, _ = player:getPosition()
       local time = lovr.timer.getTime()
-
       if jumped and (time - player_timers.jump_start > player_timers.jump_start_enough) then
          if jumped and y < 1.11 then
             player_fsm:jump_end()
             jumped = false
          end
-      end
-   elseif player_fsm:is "thinking" then
-      if (not lovr.mouse.isDown(SHOT_KEY)) and (not lovr.mouse.isDown(FAST_SHOT_KEY)) then
-         player_fsm:think_end()
       end
    end
 end
@@ -479,6 +479,9 @@ function lovr.keyreleased(key, scancode, repeating)
    if key == "g" then
       track_cursor = not track_cursor
    end
+   if key == SHOT_KEY then
+      shot_key_released = true
+   end
 end
 
 function lovr.keypressed(key)
@@ -506,6 +509,14 @@ function lovr.keypressed(key)
    end
    if key == '0' then
       print(lovr.timer.getFPS())
+   end
+   if key == '9' then
+      print("---------------------------------------")
+      for property, value in pairs(cam) do
+         if type(value) ~= "function" then
+            print(property, dbg.pretty(value))
+         end
+      end
    end
 end
 

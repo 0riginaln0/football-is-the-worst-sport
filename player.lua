@@ -3,6 +3,8 @@ local lume = require 'lib.lume'
 local copyVec3 = require 'utils.vectors'.copyVec3
 local dbg = require 'lib.debugger'
 
+local FULL_POWER_SHOT_CHARGE_TIME = 1.1
+
 local function newPlayer(world)
     local p = {}
     local PLAYER_INIT_POS = Vec3(0, 0, 0)
@@ -24,6 +26,8 @@ local function newPlayer(world)
         jump_start_enough = 0.5,
         shot_start = 0,
         shot_timeout = 1,
+        shot_charge_start = 0,
+        shot_charge_finish = FULL_POWER_SHOT_CHARGE_TIME,
     }
 
     p.fsm = machine.create {
@@ -62,14 +66,15 @@ local function newPlayer(world)
 
     p.shot_key_down = false
     p.fast_shot_key_down = false
-    p.shot_key_released = false
-    p.shot_charge = 0
-    -- Поле для удара. Если пкм зажат, то всегда писать вектор приложения силы.
-    -- И если лкм релизнут, то тоже вектор приложения силы сюда идёт.
-    -- Это поле чекает мяч
+
     p.shot = Vec3(0, 0, 0)
     p.took_shot = false
     p.shooting = false
+
+    p.charging = false
+    p.shot_key_just_pressed = false
+    p.shot_key_just_released = false
+    p.shot_charge = 0
 
     function p.updatePlayerPhysics(player, CONST_DT)
         if player.fsm:is "running" then
@@ -88,6 +93,7 @@ local function newPlayer(world)
             local velocity = player.mouse_dir:normalize() * vel_magnitude
 
             local _, vy, _ = player.collider:getLinearVelocity()
+            --#region shooting
             if player.shot_key_down or player.fast_shot_key_down then
                 player.collider:setOrientation(math.pi / 2, 2, 0, 0)
                 if player.fast_shot_key_down and not p.took_shot then
@@ -99,6 +105,7 @@ local function newPlayer(world)
                 else
                     player.shooting = false
                 end
+                --endregion shooting
             else
                 player.shooting = false
                 copyVec3 { from = velocity, into = player.last_vel }
@@ -125,6 +132,8 @@ local function newPlayer(world)
                 player.jumped = true
             end
             player.collider:setOrientation(math.pi / 2, 2, 0, 0)
+
+            --#region shooting
             local curr_player_pos = vec3(player.collider:getPosition())
             local new_mouse_dir = player.cursor_pos - curr_player_pos
             player.mouse_dir.x = new_mouse_dir.x
@@ -148,13 +157,54 @@ local function newPlayer(world)
             else
                 player.shooting = false
             end
+            --#endregion shooting
         end
     end
 
     function p.updatePlayer(player)
-        player.shot_key_down      = lovr.mouse.isDown(SHOT_KEY)
+        local new_shot_key_down = lovr.mouse.isDown(SHOT_KEY)
+        if not player.shot_key_down and new_shot_key_down then
+            player.shot_key_just_pressed = true
+        end
+        if player.shot_key_down and new_shot_key_down then
+            player.shot_key_just_pressed = false
+        end
+        if player.shot_key_down and not new_shot_key_down then
+            player.shot_key_just_released = true
+        end
+        if not player.shot_key_down and not new_shot_key_down then
+            player.shot_key_just_released = false
+        end
+
+        player.shot_key_down      = new_shot_key_down
         player.fast_shot_key_down = lovr.mouse.isDown(FAST_SHOT_KEY)
         local time                = lovr.timer.getTime()
+        if player.shot_key_just_pressed then
+            print("START CHARGING")
+            player.timers.shot_charge_start = time
+            player.timers.shot_charge_finish = time + FULL_POWER_SHOT_CHARGE_TIME
+            player.charging = true
+        end
+        if player.shot_key_down then
+            local charge_percentage
+            local time_elapsed = (time - player.timers.shot_charge_start)
+            if time_elapsed < FULL_POWER_SHOT_CHARGE_TIME then
+                charge_percentage = time_elapsed / FULL_POWER_SHOT_CHARGE_TIME
+            else
+                charge_percentage = 1
+            end
+
+            print(charge_percentage)
+            player.shot_charge = charge_percentage
+        end
+        if player.shot_key_just_released then
+            print("SHOTT!!")
+            player.shooting = true
+            player.charging = false
+        end
+
+
+
         if player.fsm:is "running" then
             if lovr.system.wasKeyPressed(SLIDE_KEY) then
                 player.fsm:slide()

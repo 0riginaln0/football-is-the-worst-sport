@@ -213,7 +213,7 @@ local function updatePhysics(dt)
    )
 
 
-   player:updatePlayer()
+   player:updatePlayer({})
 end
 
 local function lockMouse()
@@ -417,6 +417,19 @@ function lovr.keypressed(key)
    end
 end
 
-function lovr.mousemoved(x, y, dx, dy)
+-- function lovr.mousemoved(x, y, dx, dy)
 
-end
+-- end
+
+-- function lovr.mousepressed(x, y, button)
+--    print(button)
+--    if button == 1 then
+--       lmb_just_pressed = true
+--    end
+-- end
+
+-- function lovr.mousereleased(x, y, button)
+--    if button == 1 then
+--       lmb_just_released = true
+--    end
+-- end

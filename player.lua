@@ -93,13 +93,14 @@ local function newPlayer(world)
                 if player.fast_shot_key_down and not p.took_shot then
                     player.shooting = true
                     copyVec3 {
-                        from = player.mouse_dir:normalize() * clamped_len * 80,
+                        from = player.mouse_dir:normalize() * clamped_len * 66,
                         into = player.shot,
                     }
                 else
                     player.shooting = false
                 end
             else
+                player.shooting = false
                 copyVec3 { from = velocity, into = player.last_vel }
                 player.collider:setLinearVelocity(0, vy, 0)
                 player.effective_dir:lerp(player.speed * velocity, 0.169) -- Lower -> smoother

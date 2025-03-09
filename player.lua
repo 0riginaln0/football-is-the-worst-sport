@@ -1,6 +1,7 @@
 local machine = require 'lib.statemachine'
 local lume = require 'lib.lume'
 local copyVec3 = require 'utils.vectors'.copyVec3
+local dbg = require 'lib.debugger'
 
 local function newPlayer(world)
     local p = {}
@@ -10,7 +11,7 @@ local function newPlayer(world)
     collider:setMass(10)
     collider:setTag("player")
     p.collider = collider
-
+    p.collider:getShape():setUserData(p)
     p.last_vel = Vec3(0, 0, 0)
     p.jumped = false
     p.speed = 10
@@ -20,7 +21,9 @@ local function newPlayer(world)
         dive_start = 0,
         dive_timeout = 1.5,
         jump_start = 0,
-        jump_start_enough = 0.5
+        jump_start_enough = 0.5,
+        shot_start = 0,
+        shot_timeout = 1,
     }
 
     p.fsm = machine.create {
@@ -61,7 +64,12 @@ local function newPlayer(world)
     p.fast_shot_key_down = false
     p.shot_key_released = false
     p.shot_charge = 0
-
+    -- Поле для удара. Если пкм зажат, то всегда писать вектор приложения силы.
+    -- И если лкм релизнут, то тоже вектор приложения силы сюда идёт.
+    -- Это поле чекает мяч
+    p.shot = Vec3(0, 0, 0)
+    p.took_shot = false
+    p.shooting = false
 
     function p.updatePlayerPhysics(player, CONST_DT)
         if player.fsm:is "running" then
@@ -82,6 +90,15 @@ local function newPlayer(world)
             local _, vy, _ = player.collider:getLinearVelocity()
             if player.shot_key_down or player.fast_shot_key_down then
                 player.collider:setOrientation(math.pi / 2, 2, 0, 0)
+                if player.fast_shot_key_down and not p.took_shot then
+                    player.shooting = true
+                    copyVec3 {
+                        from = player.mouse_dir:normalize() * clamped_len * 80,
+                        into = player.shot,
+                    }
+                else
+                    player.shooting = false
+                end
             else
                 copyVec3 { from = velocity, into = player.last_vel }
                 player.collider:setLinearVelocity(0, vy, 0)
@@ -113,6 +130,7 @@ local function newPlayer(world)
     function p.updatePlayer(player)
         player.shot_key_down      = lovr.mouse.isDown(SHOT_KEY)
         player.fast_shot_key_down = lovr.mouse.isDown(FAST_SHOT_KEY)
+        local time                = lovr.timer.getTime()
         if player.fsm:is "running" then
             if lovr.system.wasKeyPressed(SLIDE_KEY) then
                 player.fsm:slide()
@@ -121,13 +139,15 @@ local function newPlayer(world)
             elseif lovr.system.wasKeyPressed(JUMP_KEY) then
                 player.fsm:jump()
             end
+
+            if player.took_shot and (time - player.timers.shot_start > player.timers.shot_timeout) then
+                player.took_shot = false
+            end
         elseif player.fsm:is "sliding" then
-            local time = lovr.timer.getTime()
             if time - player.timers.slide_start > player.timers.slide_timeout then
                 player.fsm:slide_end()
             end
         elseif player.fsm:is "diving" then
-            local time = lovr.timer.getTime()
             if time - player.timers.dive_start > player.timers.dive_timeout then
                 player.fsm:dive_end()
             end
@@ -135,7 +155,6 @@ local function newPlayer(world)
             local p_shape = player.collider:getShape()
             local x, y, z, angle, ax, ay, az = player.collider:getPose()
             local ground_hit = world:overlapShape(p_shape, x, y, z, angle, ax, ay, az, 0.1, "ground")
-            local time = lovr.timer.getTime()
             if player.jumped and (time - player.timers.jump_start > player.timers.jump_start_enough) then
                 if ground_hit then
                     player.fsm:jump_end()

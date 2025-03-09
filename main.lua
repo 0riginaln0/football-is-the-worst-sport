@@ -122,10 +122,11 @@ function lovr.load()
    ball.collider:setMass(0.44)
    ball.collider:setContinuous(true)
    ball.collider:setTag("ball")
-   ball.area = world:newCylinderCollider(INIT_BALL_POSITION, BALL_RADIUS * 6)
+   ball.area = world:newCylinderCollider(INIT_BALL_POSITION, BALL_RADIUS * 3)
    ball.area:setKinematic(true)
    ball.area:setOrientation(math.pi / 2, 2, 0, 0)
    ball.area:setTag("ball-area")
+   ball.area:getShape():setUserData(ball)
 
 
    -- player
@@ -161,6 +162,7 @@ local function updateCams()
    turn_cam.nudge()
 end
 
+local c = 0
 local function updatePhysics(dt)
    accumulator = accumulator + dt
    while accumulator >= CONST_DT do
@@ -189,7 +191,27 @@ local function updatePhysics(dt)
       player:updatePlayerPhysics(CONST_DT)
       updateCams()
    end
+
+
    ball.area:setPosition(ball.collider:getPosition())
+   local b_area_shape = ball.area:getShape()
+   local x, y, z, angle, ax, ay, az = ball.area:getPose()
+   world:overlapShape(b_area_shape, x, y, z, angle, ax, ay, az, 0.1,
+      "player",
+      function(p_collider, p_shape, x, y, z, nx, ny, nz)
+         local player = p_shape:getUserData()
+         if player.shooting and not player.took_shot then
+            ball.collider:setAngularVelocity(0, 0, 0)
+            ball.collider:setLinearVelocity(0, 0, 0)
+            ball.collider:applyForce(player.shot)
+            player.timers.shot_start = lovr.timer.getTime()
+            print(c)
+            c = c + 1
+            player.took_shot = true
+         end
+      end
+   )
+
 
    player:updatePlayer()
 end

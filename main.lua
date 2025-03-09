@@ -41,6 +41,7 @@ local ball
 local BALL_RADIUS = 0.25
 local INIT_BALL_POSITION = vec3(-1, 10, -1)
 local K = 0.001 -- Adjust this constant based on the desired curve effect
+
 local function calculateMagnusForce(ball)
    -- Get the ball's spin (ω)
    local angular_vx, angular_vy, angular_vz = ball:getAngularVelocity()
@@ -53,23 +54,13 @@ local function calculateMagnusForce(ball)
    -- Scale the Magnus force by the constant K
    return magnusX * K, magnusY * K, magnusZ * K
 end
+
 local function resetBallVelocity(ball)
    ball:setAngularVelocity(0, 0, 0)
    ball:setLinearVelocity(0, 0, 0)
 end
 
-local shot_key_down = false
-local shot_key_released = false
-local fast_shot_key_down = false
-local shot_charge = 0
-
-
 local track_cursor = true
-
-
-
-
-
 
 -- Cameras
 local cam = newCam()
@@ -83,11 +74,9 @@ turn_cam.zoom_speed = cam.zoom_speed
 turn_cam.polar_upper = cam.polar_upper
 turn_cam.polar_lower = cam.polar_lower
 
-
 local cam_tween_base = { value = 0 }
 local cam_tween = nil
 local cam_prev_rad_dt = 0
-
 
 -----------
 -- Input --
@@ -98,7 +87,6 @@ local x_just_pressed = false
 local v_just_pressed = false
 local t_just_pressed = false
 local y_just_pressed = false
-
 
 ----------
 -- Load --
@@ -190,7 +178,6 @@ local function updatePhysics(dt)
    player:updatePlayer()
 end
 
-
 local function lockMouse()
    if MOUSE_LOCK then
       local pad = 2
@@ -207,7 +194,6 @@ local function lockMouse()
       end
    end
 end
-
 
 ------------
 -- Update --

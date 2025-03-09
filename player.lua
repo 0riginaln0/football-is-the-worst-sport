@@ -58,6 +58,8 @@ local function newPlayer(world)
 
     p.shot_key_down = false
     p.fast_shot_key_down = false
+    p.shot_key_released = false
+    p.shot_charge = 0
 
 
     function p.updatePlayerPhysics(player, CONST_DT)

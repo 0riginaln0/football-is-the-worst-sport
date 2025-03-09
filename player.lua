@@ -125,6 +125,29 @@ local function newPlayer(world)
                 player.jumped = true
             end
             player.collider:setOrientation(math.pi / 2, 2, 0, 0)
+            local curr_player_pos = vec3(player.collider:getPosition())
+            local new_mouse_dir = player.cursor_pos - curr_player_pos
+            player.mouse_dir.x = new_mouse_dir.x
+            player.mouse_dir.y = new_mouse_dir.y
+            player.mouse_dir.z = new_mouse_dir.z
+            local mouse_dir_len = player.mouse_dir:length()
+            local clamped_len = lume.clamp(
+                mouse_dir_len, player.mouse_dir_min_len, player.mouse_dir_max_len
+            )
+            if player.shot_key_down or player.fast_shot_key_down then
+                player.collider:setOrientation(math.pi / 2, 2, 0, 0)
+                if player.fast_shot_key_down and not p.took_shot then
+                    player.shooting = true
+                    copyVec3 {
+                        from = player.mouse_dir:normalize() * clamped_len * 66,
+                        into = player.shot,
+                    }
+                else
+                    player.shooting = false
+                end
+            else
+                player.shooting = false
+            end
         end
     end
 

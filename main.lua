@@ -15,7 +15,7 @@ phywire.options.show_angulars = true   -- gizmo displaying the collider's angula
 phywire.options.show_joints = true     -- show joints between colliders
 phywire.options.show_contacts = true   -- show collision contacts (quite inefficient, triples the needed collision computations)
 local cursor = require 'utils.cursor'
-local machine = require 'lib.statemachine'
+local newPlayer = require 'player'
 
 
 ---------------------------
@@ -58,56 +58,15 @@ local function resetBallVelocity(ball)
    ball:setLinearVelocity(0, 0, 0)
 end
 
--- Player
-local player
-local last_vel = Vec3(0, 0, 0)
-local jumped = false
-local player_speed = 10
-local player_timers = {
-   slide_start = 0,
-   slide_timeout = 2,
-   dive_start = 0,
-   dive_timeout = 1.5,
-   jump_start = 0,
-   jump_start_enough = 0.5
-}
 local shot_key_down = false
 local shot_key_released = false
 local fast_shot_key_down = false
 local shot_charge = 0
-local player_fsm = machine.create {
-   initial = 'running',
-   events = {
-      { name = 'dive',      from = 'running', to = 'diving' },
-      { name = 'dive_end',  from = 'diving',  to = 'running' },
 
-      { name = 'jump',      from = 'running', to = 'jumping' },
-      { name = 'jump_end',  from = 'jumping', to = 'running' },
 
-      { name = 'slide',     from = 'running', to = 'sliding' },
-      { name = 'slide_end', from = 'sliding', to = 'running' },
-   },
-   callbacks = {
-      onslide = function()
-         player_timers.slide_start = lovr.timer.getTime()
-      end,
-      ondive = function()
-         player_timers.dive_start = lovr.timer.getTime()
-      end,
-      onjump = function()
-         player_timers.jump_start = lovr.timer.getTime()
-      end
-   }
-}
-
-local PLAYER_INIT_POS = Vec3(0, 0, 0)
 local track_cursor = true
-local cursor_pos = Vec3(0, 0, 0)
-local mouse_dir = Vec3(0, 0, 0)
-local player_max_speed = 500
-local player_min_speed = 0
-local mouse_dir_max_len = 5
-local mouse_dir_min_len = 1.5
+
+
 
 
 
@@ -141,7 +100,6 @@ local t_just_pressed = false
 local y_just_pressed = false
 
 
-
 ----------
 -- Load --
 ----------
@@ -167,10 +125,7 @@ function lovr.load()
    ball:setTag("ball")
 
    -- player
-   player = world:newCapsuleCollider(PLAYER_INIT_POS, 0.4, 1.4)
-   player:setOrientation(math.pi / 2, 2, 0, 0)
-   player:setMass(10)
-   player:setTag("player")
+   player = newPlayer(world)
 
 
    -- Parsing cli arguments
@@ -192,89 +147,8 @@ function lovr.load()
    lovr.mouse.setCursor(MY_CURSOR)
 end
 
-local player_effective_dir = Vec3(0, 0, 0)
-
-local function updatePlayerPhysics()
-   if player_fsm:is "running" then
-      local curr_player_pos = vec3(player:getPosition())
-      local new_mouse_dir = cursor_pos - curr_player_pos
-      mouse_dir.x = new_mouse_dir.x
-      mouse_dir.y = new_mouse_dir.y
-      mouse_dir.z = new_mouse_dir.z
-      local mouse_dir_len = mouse_dir:length()
-      local clamped_len = lume.clamp(mouse_dir_len, mouse_dir_min_len, mouse_dir_max_len)
-      local t = (clamped_len - mouse_dir_min_len) / (mouse_dir_max_len - mouse_dir_min_len)
-      local vel_magnitude = lume.smooth(player_min_speed, player_max_speed, t)
-      local velocity = mouse_dir:normalize() * vel_magnitude
-
-      local _, vy, _ = player:getLinearVelocity()
-      if shot_key_down or fast_shot_key_down then
-         player:setOrientation(math.pi / 2, 2, 0, 0)
-      else
-         last_vel.x, last_vel.y, last_vel.z = velocity.x, velocity.y, velocity.z
-         player:setLinearVelocity(0, vy, 0)
-         player_effective_dir:lerp(player_speed * velocity, 0.169) -- Lower -> smoother
-         player:applyLinearImpulse(player_effective_dir * CONST_DT)
-         player:setOrientation(math.pi / 2, 2, 0, 0)
-      end
-   elseif player_fsm:is "sliding" then
-   elseif player_fsm:is "diving" then
-   elseif player_fsm:is "jumping" then
-      if not jumped then
-         local curr_player_pos = vec3(player:getPosition())
-         local new_mouse_dir = cursor_pos - curr_player_pos
-         mouse_dir.x = new_mouse_dir.x
-         mouse_dir.y = new_mouse_dir.y
-         mouse_dir.z = new_mouse_dir.z
-         local v = vec3(player:getLinearVelocity())
-         player:setLinearVelocity(0, v.y, 0)
-         local velocity = mouse_dir:normalize() * last_vel:length()
-         player:applyLinearImpulse(player_speed * velocity * CONST_DT)
-         player:setOrientation(math.pi / 2, 2, 0, 0)
-         player:applyLinearImpulse(0, 50, 0)
-         jumped = true
-      end
-      player:setOrientation(math.pi / 2, 2, 0, 0)
-   end
-end
-
-local function updatePlayer()
-   shot_key_down      = lovr.mouse.isDown(SHOT_KEY)
-   fast_shot_key_down = lovr.mouse.isDown(FAST_SHOT_KEY)
-   if player_fsm:is "running" then
-      if lovr.system.wasKeyPressed(SLIDE_KEY) then
-         player_fsm:slide()
-      elseif lovr.system.wasKeyPressed(DIVE_KEY) then
-         player_fsm:dive()
-      elseif lovr.system.wasKeyPressed(JUMP_KEY) then
-         player_fsm:jump()
-      end
-   elseif player_fsm:is "sliding" then
-      local time = lovr.timer.getTime()
-      if time - player_timers.slide_start > player_timers.slide_timeout then
-         player_fsm:slide_end()
-      end
-   elseif player_fsm:is "diving" then
-      local time = lovr.timer.getTime()
-      if time - player_timers.dive_start > player_timers.dive_timeout then
-         player_fsm:dive_end()
-      end
-   elseif player_fsm:is "jumping" then
-      local p_shape = player:getShape()
-      local x, y, z, angle, ax, ay, az = player:getPose()
-      local ground_hit = world:overlapShape(p_shape, x, y, z, angle, ax, ay, az, 0.1, "ground")
-      local time = lovr.timer.getTime()
-      if jumped and (time - player_timers.jump_start > player_timers.jump_start_enough) then
-         if ground_hit then
-            player_fsm:jump_end()
-            jumped = false
-         end
-      end
-   end
-end
-
 local function updateCams()
-   local x, y, z = player:getPosition()
+   local x, y, z = player.collider:getPosition()
    cam.center.x = x
    cam.center.y = y + cam_height
    cam.center.z = z
@@ -310,10 +184,10 @@ local function updatePhysics(dt)
       local magnusX, magnusY, magnusZ = calculateMagnusForce(ball)
       ball:applyForce(magnusX, magnusY, magnusZ) -- Apply the Magnus force
 
-      updatePlayerPhysics()
+      player:updatePlayerPhysics(CONST_DT)
       updateCams()
    end
-   updatePlayer()
+   player:updatePlayer()
 end
 
 
@@ -345,8 +219,8 @@ function lovr.update(dt)
    if w_just_pressed then
       local look_vector = cam.getLookVector()
       look_vector.y = 0
-      local turn_angle = mouse_dir:angle(look_vector)
-      local cross_product = look_vector:cross(mouse_dir)
+      local turn_angle = player.mouse_dir:angle(look_vector)
+      local cross_product = look_vector:cross(player.mouse_dir)
       if cross_product.y > 0 then
          cam_tween = tween.new(0.13, cam_tween_base, { value = -turn_angle }, tween.easing.linear)
       else
@@ -423,9 +297,9 @@ function lovr.draw(pass)
    phywire.draw(pass, world)
    if track_cursor then
       local spot = cursor.cursorToWorldPoint(pass, cam)
-      cursor_pos.x = spot.x
-      cursor_pos.y = spot.y
-      cursor_pos.z = spot.z
+      player.cursor_pos.x = spot.x
+      player.cursor_pos.y = spot.y
+      player.cursor_pos.z = spot.z
    end
 
    for i, collider in ipairs(world:getColliders()) do

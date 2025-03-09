@@ -14,6 +14,7 @@ phywire.options.show_velocities = true -- vector showing direction and magnitude
 phywire.options.show_angulars = true   -- gizmo displaying the collider's angular velocity
 phywire.options.show_joints = true     -- show joints between colliders
 phywire.options.show_contacts = true   -- show collision contacts (quite inefficient, triples the needed collision computations)
+phywire.options.wireframe = true
 local cursor = require 'utils.cursor'
 local newPlayer = require 'player'
 local copyVec3 = require 'utils.vectors'.copyVec3
@@ -38,7 +39,10 @@ local accumulator = 0          -- accumulator of time to simulate
 local ground
 
 -- Ball
-local ball
+
+
+
+
 local BALL_RADIUS = 0.25
 local INIT_BALL_POSITION = vec3(-1, 10, -1)
 local K = 0.001 -- Adjust this constant based on the desired curve effect
@@ -56,9 +60,9 @@ local function calculateMagnusForce(ball)
    return magnusX * K, magnusY * K, magnusZ * K
 end
 
-local function resetBallVelocity(ball)
-   ball:setAngularVelocity(0, 0, 0)
-   ball:setLinearVelocity(0, 0, 0)
+local function resetBallVelocity(ball_collider)
+   ball_collider:setAngularVelocity(0, 0, 0)
+   ball_collider:setLinearVelocity(0, 0, 0)
 end
 
 local track_cursor = true
@@ -94,24 +98,35 @@ local y_just_pressed = false
 ----------
 function lovr.load()
    lovr.graphics.setBackgroundColor(0x87ceeb)
-   world = lovr.physics.newWorld({ tags = { "ground", "ball", "player" } })
+   world = lovr.physics.newWorld({ tags = { "ground", "ball", "ball-area", "player" } })
    -- world:setAngularDamping(0.009)
    -- world:setLinearDamping(0.001)
+   world:disableCollisionBetween("ball-area", "ball")
+   world:disableCollisionBetween("ball-area", "ground")
+   world:disableCollisionBetween("ball-area", "player")
 
    -- ground plane
    ground = world:newBoxCollider(vec3(0, -2, 0), vec3(90, 4, 120))
    ground:setFriction(0.2)
    ground:setKinematic(true)
    ground:setTag("ground")
+
+
    -- ball
-   ball = world:newSphereCollider(INIT_BALL_POSITION, BALL_RADIUS)
-   ball:setRestitution(0.7)
-   ball:setFriction(0.7)
-   ball:setLinearDamping(0.1)
-   ball:setAngularDamping(0.1)
-   ball:setMass(0.44)
-   ball:setContinuous(true)
-   ball:setTag("ball")
+   ball = {}
+   ball.collider = world:newSphereCollider(INIT_BALL_POSITION, BALL_RADIUS)
+   ball.collider:setRestitution(0.7)
+   ball.collider:setFriction(0.7)
+   ball.collider:setLinearDamping(0.1)
+   ball.collider:setAngularDamping(0.1)
+   ball.collider:setMass(0.44)
+   ball.collider:setContinuous(true)
+   ball.collider:setTag("ball")
+   ball.area = world:newCylinderCollider(INIT_BALL_POSITION, BALL_RADIUS * 6)
+   ball.area:setKinematic(true)
+   ball.area:setOrientation(math.pi / 2, 2, 0, 0)
+   ball.area:setTag("ball-area")
+
 
    -- player
    player = newPlayer(world)
@@ -153,27 +168,29 @@ local function updatePhysics(dt)
       accumulator = accumulator - CONST_DT
 
       if space_just_pressed then
-         ball:applyForce(0, 77, 0)
+         ball.collider:applyForce(0, 77, 0)
          space_just_pressed = false
       end
       if x_just_pressed then
-         resetBallVelocity(ball)
-         ball:applyForce(0, 200, -500)
-         ball:applyTorque(0, 200, 0)
+         resetBallVelocity(ball.collider)
+         ball.collider:applyForce(0, 200, -500)
+         ball.collider:applyTorque(0, 200, 0)
          x_just_pressed = false
       end
       if v_just_pressed then
-         resetBallVelocity(ball)
-         ball:applyForce(0, 200, 500)
-         ball:applyTorque(0, 200, 0)
+         resetBallVelocity(ball.collider)
+         ball.collider:applyForce(0, 200, 500)
+         ball.collider:applyTorque(0, 200, 0)
          v_just_pressed = false
       end
-      local magnusX, magnusY, magnusZ = calculateMagnusForce(ball)
-      ball:applyForce(magnusX, magnusY, magnusZ) -- Apply the Magnus force
+      local magnusX, magnusY, magnusZ = calculateMagnusForce(ball.collider)
+      ball.collider:applyForce(magnusX, magnusY, magnusZ) -- Apply the Magnus force
 
       player:updatePlayerPhysics(CONST_DT)
       updateCams()
    end
+   ball.area:setPosition(ball.collider:getPosition())
+
    player:updatePlayer()
 end
 
@@ -338,7 +355,7 @@ function lovr.keyreleased(key, scancode, repeating)
       track_cursor = not track_cursor
    end
    if key == SHOT_KEY then
-      shot_key_released = true
+      player.shot_key_released = true
    end
 end
 

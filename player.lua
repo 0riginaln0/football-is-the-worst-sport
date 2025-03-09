@@ -1,5 +1,6 @@
 local machine = require 'lib.statemachine'
 local lume = require 'lib.lume'
+local copyVec3 = require 'utils.vectors'.copyVec3
 
 local function newPlayer(world)
     local p = {}
@@ -70,8 +71,11 @@ local function newPlayer(world)
             player.mouse_dir.y = new_mouse_dir.y
             player.mouse_dir.z = new_mouse_dir.z
             local mouse_dir_len = player.mouse_dir:length()
-            local clamped_len = lume.clamp(mouse_dir_len, player.mouse_dir_min_len, player.mouse_dir_max_len)
-            local t = (clamped_len - player.mouse_dir_min_len) / (player.mouse_dir_max_len - player.mouse_dir_min_len)
+            local clamped_len = lume.clamp(
+                mouse_dir_len, player.mouse_dir_min_len, player.mouse_dir_max_len
+            )
+            local t = (clamped_len - player.mouse_dir_min_len) /
+                (player.mouse_dir_max_len - player.mouse_dir_min_len)
             local vel_magnitude = lume.smooth(player.min_speed, player.max_speed, t)
             local velocity = player.mouse_dir:normalize() * vel_magnitude
 
@@ -79,7 +83,7 @@ local function newPlayer(world)
             if player.shot_key_down or player.fast_shot_key_down then
                 player.collider:setOrientation(math.pi / 2, 2, 0, 0)
             else
-                player.last_vel.x, player.last_vel.y, player.last_vel.z = velocity.x, velocity.y, velocity.z
+                copyVec3 { from = velocity, into = player.last_vel }
                 player.collider:setLinearVelocity(0, vy, 0)
                 player.effective_dir:lerp(player.speed * velocity, 0.169) -- Lower -> smoother
                 player.collider:applyLinearImpulse(player.effective_dir * CONST_DT)

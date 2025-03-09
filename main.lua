@@ -16,6 +16,7 @@ phywire.options.show_joints = true     -- show joints between colliders
 phywire.options.show_contacts = true   -- show collision contacts (quite inefficient, triples the needed collision computations)
 local cursor = require 'utils.cursor'
 local newPlayer = require 'player'
+local copyVec3 = require 'utils.vectors'.copyVec3
 
 
 ---------------------------
@@ -140,9 +141,7 @@ local function updateCams()
    cam.center.x = x
    cam.center.y = y + cam_height
    cam.center.z = z
-   turn_cam.center.x = cam.center.x
-   turn_cam.center.y = cam.center.y
-   turn_cam.center.z = cam.center.z
+   copyVec3 { from = cam.center, into = turn_cam.center }
    cam.nudge()
    turn_cam.nudge()
 end
@@ -283,9 +282,7 @@ function lovr.draw(pass)
    phywire.draw(pass, world)
    if track_cursor then
       local spot = cursor.cursorToWorldPoint(pass, cam)
-      player.cursor_pos.x = spot.x
-      player.cursor_pos.y = spot.y
-      player.cursor_pos.z = spot.z
+      copyVec3 { from = spot, into = player.cursor_pos }
    end
 
    for i, collider in ipairs(world:getColliders()) do

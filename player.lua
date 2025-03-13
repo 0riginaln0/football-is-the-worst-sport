@@ -59,7 +59,7 @@ local function newPlayer(world)
     p.mouse_dir = Vec3(0, 0, 0)
     p.max_speed = 500
     p.min_speed = 0
-    p.mouse_dir_max_len = 5
+    p.mouse_dir_max_len = 7
     p.mouse_dir_min_len = 1.5
 
     p.effective_dir = Vec3(0, 0, 0)
@@ -84,12 +84,11 @@ local function newPlayer(world)
             player.mouse_dir.y = new_mouse_dir.y
             player.mouse_dir.z = new_mouse_dir.z
             local mouse_dir_len = player.mouse_dir:length()
-            local clamped_len = lume.clamp(
-                mouse_dir_len, player.mouse_dir_min_len, player.mouse_dir_max_len
-            )
+            local clamped_len =
+                lume.clamp(mouse_dir_len, player.mouse_dir_min_len, player.mouse_dir_max_len)
             local t = (clamped_len - player.mouse_dir_min_len) /
                 (player.mouse_dir_max_len - player.mouse_dir_min_len)
-            local vel_magnitude = lume.smooth(player.min_speed, player.max_speed, t)
+            local vel_magnitude = lume.lerp(player.min_speed, player.max_speed, t)
             local velocity = player.mouse_dir:normalize() * vel_magnitude
 
             local _, vy, _ = player.collider:getLinearVelocity()
@@ -180,7 +179,7 @@ local function newPlayer(world)
         player.fast_shot_key_down = lovr.mouse.isDown(FAST_SHOT_KEY)
         local time                = lovr.timer.getTime()
         if player.shot_key_just_pressed then
-            print("START CHARGING")
+            -- print("START CHARGING")
             player.timers.shot_charge_start = time
             player.timers.shot_charge_finish = time + FULL_POWER_SHOT_CHARGE_TIME
             player.charging = true
@@ -194,11 +193,11 @@ local function newPlayer(world)
                 charge_percentage = 1
             end
 
-            print(charge_percentage)
+            -- print(charge_percentage)
             player.shot_charge = charge_percentage
         end
         if player.shot_key_just_released then
-            print("SHOTT!!")
+            -- print("SHOTT!!")
             player.shooting = true
             player.charging = false
         end

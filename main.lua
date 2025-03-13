@@ -18,7 +18,6 @@ phywire.options.wireframe = true
 local cursor = require 'utils.cursor'
 local newPlayer = require 'player'
 local copyVec3 = require 'utils.vectors'.copyVec3
-local UI2D = require 'lib.ui2d'
 
 
 ---------------------------
@@ -98,8 +97,6 @@ local y_just_pressed = false
 -- Load --
 ----------
 function lovr.load()
-    UI2D.Init("lovr")
-
     lovr.graphics.setBackgroundColor(0x87ceeb)
     world = lovr.physics.newWorld({ tags = { "ground", "ball", "ball-area", "player" } })
     -- world:setAngularDamping(0.009)
@@ -133,7 +130,7 @@ function lovr.load()
 
 
     -- player
-    p = newPlayer(world)
+    player = newPlayer(world)
 
 
     -- Parsing cli arguments
@@ -156,7 +153,7 @@ function lovr.load()
 end
 
 local function updateCams()
-    local x, y, z = p.collider:getPosition()
+    local x, y, z = player.collider:getPosition()
     cam.center.x = x
     cam.center.y = y + cam_height
     cam.center.z = z
@@ -191,7 +188,7 @@ local function updatePhysics(dt)
         local magnusX, magnusY, magnusZ = calculateMagnusForce(ball.collider)
         ball.collider:applyForce(magnusX, magnusY, magnusZ) -- Apply the Magnus force
 
-        p:updatePlayerPhysics(CONST_DT)
+        player:updatePlayerPhysics(CONST_DT)
         updateCams()
     end
 
@@ -208,7 +205,7 @@ local function updatePhysics(dt)
                 ball.collider:setLinearVelocity(0, 0, 0)
                 ball.collider:applyForce(player.shot)
                 player.timers.shot_start = lovr.timer.getTime()
-                -- print(c)
+                print(c)
                 c = c + 1
                 player.took_shot = true
             end
@@ -216,7 +213,7 @@ local function updatePhysics(dt)
     )
 
 
-    p:updatePlayer({})
+    player:updatePlayer({})
 end
 
 local function lockMouse()
@@ -240,15 +237,14 @@ end
 -- Update --
 ------------
 function lovr.update(dt)
-    UI2D.InputInfo()
     lockMouse()
     updatePhysics(dt)
 
     if w_just_pressed then
         local look_vector = cam.getLookVector()
         look_vector.y = 0
-        local turn_angle = p.mouse_dir:angle(look_vector)
-        local cross_product = look_vector:cross(p.mouse_dir)
+        local turn_angle = player.mouse_dir:angle(look_vector)
+        local cross_product = look_vector:cross(player.mouse_dir)
         if cross_product.y > 0 then
             cam_tween = tween.new(0.13, cam_tween_base, { value = -turn_angle }, tween.easing.linear)
         else
@@ -311,27 +307,6 @@ end
 -- Draw --
 ----------
 function lovr.draw(pass)
-    pass:setProjection(1, mat4():orthographic(pass:getDimensions()))
-
-    -- Every window should be contained in a Begin/End block. This is the start of the first window.
-    UI2D.Begin("First Window", 50, 200)
-    if UI2D.Button("first button") then
-        print("from 1st button")
-    end
-    if UI2D.RadioButton("Radio1", rb_idx == 1) then
-        rb_idx = 1
-    end
-    if UI2D.RadioButton("Radio2", rb_idx == 2) then
-        rb_idx = 2
-    end
-    if UI2D.RadioButton("Radio3", rb_idx == 3) then
-        rb_idx = 3
-    end
-    UI2D.End(pass)
-    local ui_passes = UI2D.RenderFrame(pass)
-    table.insert(ui_passes, pass)
-
-
     -- Switch between cameras based on input
     if lovr.system.isKeyDown('i') then
         turn_cam.setCamera(pass)
@@ -346,7 +321,7 @@ function lovr.draw(pass)
     phywire.draw(pass, world)
     if track_cursor then
         local spot = cursor.cursorToWorldPoint(pass, cam)
-        copyVec3 { from = spot, into = p.cursor_pos }
+        copyVec3 { from = spot, into = player.cursor_pos }
     end
 
     for i, collider in ipairs(world:getColliders()) do
@@ -373,9 +348,6 @@ function lovr.draw(pass)
     pass:sphere(-1, 0, 0, 0.2)
 
     pass:setColor(1, 1, 1)
-
-
-    return lovr.graphics.submit(ui_passes)
 end
 
 ---------------------
@@ -390,11 +362,9 @@ end
 function lovr.wheelmoved(dx, dy)
     cam.wheelmoved(dx, dy)
     turn_cam.wheelmoved(dx, dy)
-    UI2D.WheelMoved(dx, dy)
 end
 
 function lovr.keyreleased(key, scancode, repeating)
-    UI2D.KeyReleased()
     if key == "f11" then
         local fullscreen, fullscreentype = lovr.window.getFullscreen()
         lovr.window.setFullscreen(not fullscreen, fullscreentype or "desktop")
@@ -407,12 +377,11 @@ function lovr.keyreleased(key, scancode, repeating)
         track_cursor = not track_cursor
     end
     if key == SHOT_KEY then
-        p.shot_key_released = true
+        player.shot_key_released = true
     end
 end
 
-function lovr.keypressed(key, repeating)
-    UI2D.KeyPressed(key, repeating)
+function lovr.keypressed(key)
     if key == 'escape' then
         lovr.event.quit()
     end
@@ -446,10 +415,6 @@ function lovr.keypressed(key, repeating)
             end
         end
     end
-end
-
-function lovr.textinput(text, code)
-    UI2D.TextInput(text)
 end
 
 -- function lovr.mousemoved(x, y, dx, dy)

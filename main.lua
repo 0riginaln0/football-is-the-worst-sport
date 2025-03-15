@@ -18,6 +18,8 @@ phywire.options.wireframe = true
 local cursor = require 'utils.cursor'
 local newPlayer = require 'player'
 local copyVec3 = require 'utils.vectors'.copyVec3
+UI2D = require 'lib.ui2d.ui2d'
+
 
 
 ---------------------------
@@ -45,7 +47,7 @@ local ground
 
 local BALL_RADIUS = 0.25
 local INIT_BALL_POSITION = vec3(-1, 10, -1)
-local K = 0.001 -- Adjust this constant based on the desired curve effect
+local K = 0.01 -- Adjust this constant based on the desired curve effect
 
 local function calculateMagnusForce(ball)
     -- Get the ball's spin (ω)
@@ -97,10 +99,9 @@ local y_just_pressed = false
 -- Load --
 ----------
 function lovr.load()
+    UI2D.Init("lovr")
     lovr.graphics.setBackgroundColor(0x87ceeb)
     world = lovr.physics.newWorld({ tags = { "ground", "ball", "ball-area", "player" } })
-    -- world:setAngularDamping(0.009)
-    -- world:setLinearDamping(0.001)
     world:disableCollisionBetween("ball-area", "ball")
     world:disableCollisionBetween("ball-area", "ground")
     world:disableCollisionBetween("ball-area", "player")
@@ -117,12 +118,12 @@ function lovr.load()
     ball.collider = world:newSphereCollider(INIT_BALL_POSITION, BALL_RADIUS)
     ball.collider:setRestitution(0.7)
     ball.collider:setFriction(0.7)
-    ball.collider:setLinearDamping(0.1)
-    ball.collider:setAngularDamping(0.1)
+    ball.collider:setLinearDamping(0.3)
+    ball.collider:setAngularDamping(0.7)
     ball.collider:setMass(0.44)
     ball.collider:setContinuous(true)
     ball.collider:setTag("ball")
-    ball.area = world:newCylinderCollider(INIT_BALL_POSITION, BALL_RADIUS * 3)
+    ball.area = world:newCylinderCollider(INIT_BALL_POSITION, BALL_RADIUS * 3, 0.04)
     ball.area:setKinematic(true)
     ball.area:setOrientation(math.pi / 2, 2, 0, 0)
     ball.area:setTag("ball-area")
@@ -237,6 +238,7 @@ end
 -- Update --
 ------------
 function lovr.update(dt)
+    UI2D.InputInfo()
     lockMouse()
     updatePhysics(dt)
 
@@ -303,10 +305,24 @@ function lovr.update(dt)
     end
 end
 
+local axis = 1
+
 ----------
 -- Draw --
 ----------
 function lovr.draw(pass)
+    -- GUI CODE
+    pass:setProjection(1, mat4():orthographic(pass:getDimensions()))
+    UI2D.Begin("Pose", 0, 0)
+    if UI2D.RadioButton("X", axis == 1) then axis = 1 end
+    UI2D.SameLine()
+    if UI2D.RadioButton("Y", axis == 2) then axis = 2 end
+    UI2D.SameLine()
+    if UI2D.RadioButton("Z", axis == 3) then axis = 3 end
+    UI2D.End(pass)
+    local ui_passes = UI2D.RenderFrame(pass)
+    -- GUI CODE
+
     -- Switch between cameras based on input
     if lovr.system.isKeyDown('i') then
         turn_cam.setCamera(pass)
@@ -348,6 +364,10 @@ function lovr.draw(pass)
     pass:sphere(-1, 0, 0, 0.2)
 
     pass:setColor(1, 1, 1)
+
+    -- GUI CODE
+    table.insert(ui_passes, pass)
+    return lovr.graphics.submit(ui_passes)
 end
 
 ---------------------
@@ -360,11 +380,17 @@ function lovr.resize(width, height)
 end
 
 function lovr.wheelmoved(dx, dy)
+    UI2D.WheelMoved(dx, dy)
     cam.wheelmoved(dx, dy)
     turn_cam.wheelmoved(dx, dy)
+
+    if not UI2D.HasMouse() then
+        -- something
+    end
 end
 
 function lovr.keyreleased(key, scancode, repeating)
+    UI2D.KeyReleased()
     if key == "f11" then
         local fullscreen, fullscreentype = lovr.window.getFullscreen()
         lovr.window.setFullscreen(not fullscreen, fullscreentype or "desktop")
@@ -381,7 +407,8 @@ function lovr.keyreleased(key, scancode, repeating)
     end
 end
 
-function lovr.keypressed(key)
+function lovr.keypressed(key, scancode, repeating)
+    UI2D.KeyPressed(key, repeating)
     if key == 'escape' then
         lovr.event.quit()
     end
@@ -417,19 +444,12 @@ function lovr.keypressed(key)
     end
 end
 
--- function lovr.mousemoved(x, y, dx, dy)
+function lovr.textinput(text, code)
+    UI2D.TextInput(text)
+end
 
--- end
-
--- function lovr.mousepressed(x, y, button)
---    print(button)
---    if button == 1 then
---       lmb_just_pressed = true
---    end
--- end
-
--- function lovr.mousereleased(x, y, button)
---    if button == 1 then
---       lmb_just_released = true
---    end
--- end
+function lovr.mousepressed(x, y, button)
+    if button == 1 and not UI2D.HasMouse() then
+        -- Code to handle lmb pressed if not in menu
+    end
+end

@@ -136,7 +136,7 @@ function lovr.load()
 
   -- Parsing cli arguments
   for _, value in pairs(arg) do
-    if value == '--hb' then     -- Enable heartbeat
+    if value == '--hb' then -- Enable heartbeat
       local heartbeat_file = io.open("heartbeat.lua", 'r')
       if not heartbeat_file then
         print("no hearbeat.lua file found")
@@ -187,7 +187,7 @@ local function updatePhysics(dt)
       v_just_pressed = false
     end
     local magnusX, magnusY, magnusZ = calculateMagnusForce(ball.collider)
-    ball.collider:applyForce(magnusX, magnusY, magnusZ)     -- Apply the Magnus force
+    ball.collider:applyForce(magnusX, magnusY, magnusZ) -- Apply the Magnus force
 
     player:updatePlayerPhysics(CONST_DT)
     updateCams()
@@ -214,7 +214,7 @@ local function updatePhysics(dt)
   )
 
 
-  player:updatePlayer({})
+  player:updatePlayer()
 end
 
 local function lockMouse()

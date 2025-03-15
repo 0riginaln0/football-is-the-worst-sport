@@ -52,6 +52,9 @@ Embeddable debugger:
 A tutorial on how to move a character smoothly:
 - https://youtu.be/ifETf6bNxrs?si=IRBJOuiWNP6cN3hO
 
+An immediate mode GUI for LOVR:
+- https://github.com/immortalx74/lovr-ui2d
+
 Misc:
 
 - https://us.select-sport.com/pages/size-chart-soccer-balls

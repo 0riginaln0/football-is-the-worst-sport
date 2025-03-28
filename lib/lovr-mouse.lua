@@ -51,110 +51,110 @@ local mouse = {}
 -- LÖVR uses framebuffer scale for everything, but glfw uses window scale for events.
 -- It is necessary to convert between the two at all boundaries.
 function mouse.getScale()
-  local x, _ = ffi.new('int[1]'), ffi.new('int[1]')
-  C.glfwGetWindowSize(window, x, _)
-  return lovr.system.getWindowWidth() / x[0]
+    local x, _ = ffi.new('int[1]'), ffi.new('int[1]')
+    C.glfwGetWindowSize(window, x, _)
+    return lovr.system.getWindowWidth() / x[0]
 end
 
 function mouse.getX()
-  local x = ffi.new('double[1]')
-  C.glfwGetCursorPos(window, x, nil)
-  return x[0] * mouse.getScale()
+    local x = ffi.new('double[1]')
+    C.glfwGetCursorPos(window, x, nil)
+    return x[0] * mouse.getScale()
 end
 
 function mouse.getY()
-  local y = ffi.new('double[1]')
-  C.glfwGetCursorPos(window, nil, y)
-  return y[0] * mouse.getScale()
+    local y = ffi.new('double[1]')
+    C.glfwGetCursorPos(window, nil, y)
+    return y[0] * mouse.getScale()
 end
 
 function mouse.getPosition()
-  local x, y = ffi.new('double[1]'), ffi.new('double[1]')
-  local scale = mouse.getScale()
-  C.glfwGetCursorPos(window, x, y)
-  return x[0] * scale, y[0] * scale
+    local x, y = ffi.new('double[1]'), ffi.new('double[1]')
+    local scale = mouse.getScale()
+    C.glfwGetCursorPos(window, x, y)
+    return x[0] * scale, y[0] * scale
 end
 
 function mouse.setX(x)
-  local y = mouse.getY()
-  local scale = mouse.getScale()
-  C.glfwSetCursorPos(window, x / scale, y / scale)
+    local y = mouse.getY()
+    local scale = mouse.getScale()
+    C.glfwSetCursorPos(window, x / scale, y / scale)
 end
 
 function mouse.setY(y)
-  local x = mouse.getX()
-  local scale = mouse.getScale()
-  C.glfwSetCursorPos(window, x / scale, y / scale)
+    local x = mouse.getX()
+    local scale = mouse.getScale()
+    C.glfwSetCursorPos(window, x / scale, y / scale)
 end
 
 function mouse.setPosition(x, y)
-  local scale = mouse.getScale()
-  C.glfwSetCursorPos(window, x / scale, y / scale)
+    local scale = mouse.getScale()
+    C.glfwSetCursorPos(window, x / scale, y / scale)
 end
 
 function mouse.isDown(button, ...)
-  if not button then return false end
-  return C.glfwGetMouseButton(window, button - 1) > 0 or mouse.isDown(...)
+    if not button then return false end
+    return C.glfwGetMouseButton(window, button - 1) > 0 or mouse.isDown(...)
 end
 
 function mouse.getRelativeMode()
-  return C.glfwGetInputMode(window, C.GLFW_CURSOR) == C.GLFW_CURSOR_DISABLED
+    return C.glfwGetInputMode(window, C.GLFW_CURSOR) == C.GLFW_CURSOR_DISABLED
 end
 
 function mouse.setRelativeMode(enable)
-  C.glfwSetInputMode(window, C.GLFW_CURSOR, enable and C.GLFW_CURSOR_DISABLED or C.GLFW_CURSOR_NORMAL)
+    C.glfwSetInputMode(window, C.GLFW_CURSOR, enable and C.GLFW_CURSOR_DISABLED or C.GLFW_CURSOR_NORMAL)
 end
 
 function mouse.newCursor(source, hotx, hoty)
-  if type(source) == 'string' or tostring(source) == 'Blob' then
-    source = lovr.data.newImage(source, false)
-  else
-    assert(tostring(source) == 'Image', 'Bad argument #1 to newCursor (Image expected)')
-  end
-  local image = ffi.new('GLFWimage', source:getWidth(), source:getHeight(), source:getPointer())
-  return ffi.gc(C.glfwCreateCursor(image, hotx or 0, hoty or 0), C.glfwDestroyCursor)
+    if type(source) == 'string' or tostring(source) == 'Blob' then
+        source = lovr.data.newImage(source, false)
+    else
+        assert(tostring(source) == 'Image', 'Bad argument #1 to newCursor (Image expected)')
+    end
+    local image = ffi.new('GLFWimage', source:getWidth(), source:getHeight(), source:getPointer())
+    return ffi.gc(C.glfwCreateCursor(image, hotx or 0, hoty or 0), C.glfwDestroyCursor)
 end
 
 function mouse.getSystemCursor(kind)
-  local kinds = {
-    arrow = C.GLFW_ARROW_CURSOR,
-    ibeam = C.GLFW_IBEAM_CURSOR,
-    crosshair = C.GLFW_CROSSHAIR_CURSOR,
-    hand = C.GLFW_HAND_CURSOR,
-    sizewe = C.GLFW_HRESIZE_CURSOR,
-    sizens = C.GLFW_VRESIZE_CURSOR
-  }
-  assert(kinds[kind], string.format('Unknown cursor %q', tostring(kind)))
-  return ffi.gc(C.glfwCreateStandardCursor(kinds[kind]), C.glfwDestroyCursor)
+    local kinds = {
+        arrow = C.GLFW_ARROW_CURSOR,
+        ibeam = C.GLFW_IBEAM_CURSOR,
+        crosshair = C.GLFW_CROSSHAIR_CURSOR,
+        hand = C.GLFW_HAND_CURSOR,
+        sizewe = C.GLFW_HRESIZE_CURSOR,
+        sizens = C.GLFW_VRESIZE_CURSOR
+    }
+    assert(kinds[kind], string.format('Unknown cursor %q', tostring(kind)))
+    return ffi.gc(C.glfwCreateStandardCursor(kinds[kind]), C.glfwDestroyCursor)
 end
 
 function mouse.setCursor(cursor)
-  C.glfwSetCursor(window, cursor)
+    C.glfwSetCursor(window, cursor)
 end
 
 C.glfwSetMouseButtonCallback(window, function(target, button, action, mods)
-  if target == window then
-    local x, y = mouse.getPosition()
-    lovr.event.push(action > 0 and 'mousepressed' or 'mousereleased', x, y, button + 1, false)
-  end
+    if target == window then
+        local x, y = mouse.getPosition()
+        lovr.event.push(action > 0 and 'mousepressed' or 'mousereleased', x, y, button + 1, false)
+    end
 end)
 
 local px, py = mouse.getPosition()
 C.glfwSetCursorPosCallback(window, function(target, x, y)
-  if target == window then
-    local scale = mouse.getScale()
-    x = x * scale
-    y = y * scale
-    lovr.event.push('mousemoved', x, y, x - px, y - py, false)
-    px, py = x, y
-  end
+    if target == window then
+        local scale = mouse.getScale()
+        x = x * scale
+        y = y * scale
+        lovr.event.push('mousemoved', x, y, x - px, y - py, false)
+        px, py = x, y
+    end
 end)
 
 C.glfwSetScrollCallback(window, function(target, x, y)
-  if target == window then
-    local scale = mouse.getScale()
-    lovr.event.push('wheelmoved', x * scale, y * scale)
-  end
+    if target == window then
+        local scale = mouse.getScale()
+        lovr.event.push('wheelmoved', x * scale, y * scale)
+    end
 end)
 
 return mouse

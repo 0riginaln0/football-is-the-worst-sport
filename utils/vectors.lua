@@ -1,5 +1,5 @@
 local m = {}
----
+
 --- Copies the coordinates from one 3D vector to another.
 ---
 --- This function takes a table containing two vectors, `from` and `into`,
@@ -7,7 +7,7 @@ local m = {}
 ---
 ---@param vecs { from: vec3, into: vec3 }
 function m.copyVec3(vecs)
-  vecs.into.x, vecs.into.y, vecs.into.z = vecs.from.x, vecs.from.y, vecs.from.z
+    vecs.into.x, vecs.into.y, vecs.into.z = vecs.from.x, vecs.from.y, vecs.from.z
 end
 
 return m

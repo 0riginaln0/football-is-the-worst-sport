@@ -1,11 +1,7 @@
 {
-    "Lua.diagnostics.globals": [
-        "lovr",
-        "vec4",
-        "vec3",
-        "mat4",
-        "Vec3",
-        "Mat4",
-        "Vec2"
-    ]
+    "Lua.diagnostics.globals": [],
+    "Lua.workspace.library": [
+        "${addons}/lovr/module/library"
+    ],
+    "Lua.workspace.checkThirdParty": false
 }

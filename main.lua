@@ -159,7 +159,7 @@ local function updateCams()
     cam.center.x = x
     cam.center.y = y + cam_height
     cam.center.z = z
-    copyVec3 { from = cam.center, into = turn_cam.center }
+    copyVec3(cam.center, turn_cam.center)
     cam.nudge()
     turn_cam.nudge()
 end
@@ -338,7 +338,7 @@ function lovr.draw(pass)
     phywire.draw(pass, world)
     if track_cursor then
         local spot = cursor.cursorToWorldPoint(pass, cam)
-        copyVec3 { from = spot, into = player.cursor_pos }
+        copyVec3(spot, player.cursor_pos)
     end
 
     for i, collider in ipairs(world:getColliders()) do

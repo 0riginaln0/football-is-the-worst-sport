@@ -17,7 +17,6 @@ phywire.options.show_contacts = true   -- show collision contacts (quite ineffic
 phywire.options.wireframe = true
 local cursor = require 'utils.cursor'
 local newPlayer = require 'player'
-local copyVec3 = require 'utils.vectors'.copyVec3
 UI2D = require 'lib.ui2d.ui2d'
 
 
@@ -61,8 +60,7 @@ local function calculateMagnusForce(ball)
     -- Scale the Magnus force by the constant K
     return magnusX * K, magnusY * K, magnusZ * K
 end
-local ffi = require 'ffi'
-print(_ENV, "asdasda")
+
 local function resetBallVelocity(ball_collider)
     ball_collider:setAngularVelocity(0, 0, 0)
     ball_collider:setLinearVelocity(0, 0, 0)
@@ -156,10 +154,8 @@ end
 
 local function updateCams()
     local x, y, z = player.collider:getPosition()
-    cam.center.x = x
-    cam.center.y = y + cam_height
-    cam.center.z = z
-    copyVec3(cam.center, turn_cam.center)
+    cam.center:set(x, y + cam_height, z)
+    turn_cam.center:set(x, y + cam_height, z)
     cam.nudge()
     turn_cam.nudge()
 end
@@ -338,7 +334,7 @@ function lovr.draw(pass)
     phywire.draw(pass, world)
     if track_cursor then
         local spot = cursor.cursorToWorldPoint(pass, cam)
-        copyVec3(spot, player.cursor_pos)
+        player.cursor_pos:set(spot:unpack())
     end
 
     for i, collider in ipairs(world:getColliders()) do

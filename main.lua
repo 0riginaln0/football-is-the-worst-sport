@@ -45,11 +45,11 @@ local BALL_RADIUS = 0.25
 local INIT_BALL_POSITION = vec3(-1, 10, -1)
 local K = 0.01 -- Adjust this constant based on the desired curve effect
 
-local function calculateMagnusForce(ball)
+local function calculateMagnusForce(ball_collider)
     -- Get the ball's spin (ω)
-    local angular_vx, angular_vy, angular_vz = ball:getAngularVelocity()
+    local angular_vx, angular_vy, angular_vz = ball_collider:getAngularVelocity()
     -- Get the ball's velocity (v)
-    local linear_vx, linear_vy, linear_vz = ball:getLinearVelocity()
+    local linear_vx, linear_vy, linear_vz = ball_collider:getLinearVelocity()
     -- Calculate the cross product ω × v
     local magnusX = angular_vy * linear_vz - angular_vz * linear_vy
     local magnusY = angular_vz * linear_vx - angular_vx * linear_vz
@@ -129,6 +129,7 @@ function lovr.load()
     player = newPlayer(world)
 
 
+    -- TODO parse for client or server mode. or I will have just separate server proj
     -- Parsing cli arguments
     for _, value in pairs(arg) do
         if value == '--hb' then -- Enable heartbeat
@@ -143,7 +144,7 @@ function lovr.load()
             heartbeat_file:close()
         end
     end
-
+    -- TODO If not separate proj, LOAD if client mode on.
     MY_CURSOR = lovr.mouse.newCursor('res/cursor.png', 20, 20)
     lovr.mouse.setCursor(MY_CURSOR)
 end
@@ -186,7 +187,6 @@ local function updatePhysics(dt)
         updateCams()
     end
 
-
     ball.area:setPosition(ball.collider:getPosition())
     local b_area_shape = ball.area:getShape()
     local x, y, z, angle, ax, ay, az = ball.area:getPose()
@@ -205,7 +205,6 @@ local function updatePhysics(dt)
             end
         end
     )
-
 
     player:updatePlayer()
 end
@@ -232,7 +231,6 @@ end
 ------------
 function lovr.update(dt)
     UI2D.InputInfo()
-    lockMouse()
     updatePhysics(dt)
 
     if w_just_pressed then
@@ -304,6 +302,7 @@ local axis = 1
 -- Draw --
 ----------
 function lovr.draw(pass)
+    lockMouse()
     -- GUI CODE
     pass:setProjection(1, mat4():orthographic(pass:getDimensions()))
     UI2D.Begin("Pose", 0, 0)

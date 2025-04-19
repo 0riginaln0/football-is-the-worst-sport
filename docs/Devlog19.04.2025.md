@@ -108,7 +108,7 @@ local FULL_POWER_SHOT_CHARGE_TIME = 1.1
 Oh my... That was horrible. Globals are bad. Lucky me, I have a chance to fix it during splitting it up to server and client.
 
 
-But now I have to look deeper into server functions and document all the data it uses from server. Because atm there are a lot of calls for lovr.system.wasKeyPressed and e.t.c. in the server-side functions.
+But now I have to look deeper into server functions and document all the data it uses from the client. Because atm there are a lot of calls for lovr.system.wasKeyPressed and e.t.c. in the server-side functions.
 
 
 Info that server needs:

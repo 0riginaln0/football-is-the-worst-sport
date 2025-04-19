@@ -112,7 +112,7 @@ Oh my... That was horrible. Globals are bad. Lucky me, I have a chance to fix it
 
 # Internal stuff
 
-But now I have to look deeper into server functions and document all the data it uses from the client. Because atm there are a lot of calls for lovr.system.wasKeyPressed and e.t.c. in the server-side functions.
+But now I have to look deeper into server functions and document all the data they use from the client side. Because atm there are a lot of calls for lovr.system.wasKeyPressed and e.t.c. in the server-side functions.
 
 
 Info that server needs:

@@ -195,8 +195,6 @@ local function newPlayer(world)
             player.charging = false
         end
 
-
-
         if player.fsm:is "running" then
             if lovr.system.wasKeyPressed(SLIDE_KEY) then
                 player.fsm:slide()

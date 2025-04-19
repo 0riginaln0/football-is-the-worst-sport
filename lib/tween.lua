@@ -146,7 +146,7 @@ end
 local function calculatePAS(p, a, c, d)
     p, a = p or d * 0.3, a or 0
     if a < abs(c) then return p, c, p / 4 end -- p, a, s
-    return p, a, p / (2 * pi) * asin(c / a) -- p,a,s
+    return p, a, p / (2 * pi) * asin(c / a)   -- p,a,s
 end
 local function inElastic(t, b, c, d, a, p)
     local s

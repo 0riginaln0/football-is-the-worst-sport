@@ -38,11 +38,8 @@ local CONST_DT = 0.01666666666 -- my constant dt
 local accumulator = 0          -- accumulator of time to simulate
 
 local ground
-
--- Ball
-
-
-
+local ball = {}
+local player
 
 local BALL_RADIUS = 0.25
 local INIT_BALL_POSITION = vec3(-1, 10, -1)
@@ -113,7 +110,6 @@ function lovr.load()
 
 
     -- ball
-    ball = {}
     ball.collider = world:newSphereCollider(INIT_BALL_POSITION, BALL_RADIUS)
     ball.collider:setRestitution(0.7)
     ball.collider:setFriction(0.7)

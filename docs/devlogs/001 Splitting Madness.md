@@ -1,3 +1,5 @@
+19.04.2025 23:13
+
 # Great comeback!
 
 Ok so my task for now is to document all the state of my game and split it up for the Client and Server parts. And then link them via ENet.
@@ -107,6 +109,8 @@ local FULL_POWER_SHOT_CHARGE_TIME = 1.1
 
 Oh my... That was horrible. Globals are bad. Lucky me, I have a chance to fix it during splitting it up to server and client.
 
+
+# Internal stuff
 
 But now I have to look deeper into server functions and document all the data it uses from the client. Because atm there are a lot of calls for lovr.system.wasKeyPressed and e.t.c. in the server-side functions.
 

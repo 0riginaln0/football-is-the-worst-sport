@@ -166,7 +166,7 @@ Plans for refactoring:
 5. Seperate updatePhysics from regular update
 
 
-# Outer words
+# Final words
 Okay, so here I am. Now I understand why somebody from youtube said that if you want to do a multiplayer game, you better start with "client-server" architecture from the day 1. But my current mess is not that bad overall.
 
 See you tomorrow!

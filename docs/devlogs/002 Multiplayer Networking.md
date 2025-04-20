@@ -210,4 +210,3 @@ So here it is, the template for the client-server architecture is done:
 - Server listens for the incoming input and sends updates for connected peers.
 
 Seems like a good start!
-

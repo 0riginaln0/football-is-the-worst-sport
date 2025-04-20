@@ -30,7 +30,7 @@ I've found legit [Valve's docs](https://developer.valvesoftware.com/wiki/Source_
 > After simulating a tick, the server decides *if any client needs a world update* and takes a snapshot of the current world state if necessary.   
 > - Game data is compressed using *delta compression* to reduce network load. That means the server doesn't send a full world snapshot each time, but rather only changes (a delta snapshot) that happened since the last *acknowledged update*. With each packet sent between the client and server, acknowledge numbers are attached to keep track of their data flow.
 
-My friend MigoMipo has developed [his own game server for HQM game](https://github.com/migomipo/migo-hqm-server), and I asked him to explain to me what an acknowleded update is and how it works:
+My friend MigoMipo has developed [his own game server for the HQM game](https://github.com/migomipo/migo-hqm-server), and I asked him to explain to me what an acknowleded update is and how it works:
 - Each frame in a game has a number, it is included when the server sends it to the client
 - In each input update that the client sends to the server, it includes the number of the most recently received frame. So that is how the server "Acknowledges" the update.
 

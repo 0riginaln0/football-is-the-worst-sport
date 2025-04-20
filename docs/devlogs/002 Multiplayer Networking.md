@@ -1,4 +1,4 @@
-20.04.2025 11:15
+20.04.2025 16:23
 
 # Intro
 Yesterday I somehow managed to distinguish the data wich is used in the server and in the client. Today's goal is to finally create a separate `server.lua` file that will run all the world simulation. Let's dive in!

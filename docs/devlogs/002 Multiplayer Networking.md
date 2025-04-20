@@ -59,7 +59,7 @@ Useful docs & sources
 - [ENet official site](http://enet.bespin.org/)
 
 
-Here is a templete for the client-server architecture:
+Here is a template for the client-server architecture in LÖVR:
 ```
 my_project/
 ├── main.lua      (Entry point)

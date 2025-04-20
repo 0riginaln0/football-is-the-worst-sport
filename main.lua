@@ -34,15 +34,16 @@ FAST_SHOT_KEY = 2
 WINDOW_WIDTH, WINDOW_HEIGHT = lovr.system.getWindowDimensions()
 MOUSE_LOCK = false
 local world
-local CONST_DT = 0.01666666666 -- my constant dt
-local accumulator = 0          -- accumulator of time to simulate
+local CONST_DT = 0.015 -- my constant dt, aka "the timestep"
+local accumulator = 0  -- accumulator of time to simulate
 
 local ground
 local ball = {}
 local player
 
 local BALL_RADIUS = 0.25
-local INIT_BALL_POSITION = vec3(-1, 10, -1)
+local INIT_BALL_POSITION = Vec3(-1, 10, -1)
+print(type(INIT_BALL_POSITION))
 local K = 0.01 -- Adjust this constant based on the desired curve effect
 
 local function calculateMagnusForce(ball_collider)

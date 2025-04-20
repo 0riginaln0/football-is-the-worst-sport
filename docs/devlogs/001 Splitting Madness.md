@@ -143,6 +143,7 @@ lovr.system.isKeyDown('r')
 lovr.system.isKeyDown('f')
 spot -- for updating player movement
 -- screen width, height after resize info for updating cams
+lovr.mouse.getPosition()
 ```
 
 Info that client needs:

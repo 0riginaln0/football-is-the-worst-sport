@@ -9,7 +9,7 @@ each player has its peer
 each player has its input
 each player has its last_frame
 
-# Has 2 channels
+# Has 3 channels
 0 channel is for `"Unsequenced"` messages (player input, world output)
 1 channel is for `"reliable"` messages (chat)
 

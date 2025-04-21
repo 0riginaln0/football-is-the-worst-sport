@@ -1,7 +1,7 @@
 20.04.2025 16:23
 
 # Intro
-Yesterday I somehow managed to distinguish the data wich is used in the server and in the client. Today's goal is to finally create a separate `server.lua` file that will run all the world simulation. Let's dive in!
+Yesterday I somehow managed to distinguish the data which is used in the server and in the client. Today's goal is to finally create a separate `server.lua` file that will run all the world simulation. Let's dive in!
 
 # Thinking about the future
 
@@ -59,7 +59,7 @@ Useful docs & sources
 - [ENet official site](http://enet.bespin.org/)
 
 
-Here is a templete for the client-server architecture:
+Here is a template for the client-server architecture in LÖVR:
 ```
 my_project/
 ├── main.lua      (Entry point)

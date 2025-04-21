@@ -43,7 +43,6 @@ local player
 
 local BALL_RADIUS = 0.25
 local INIT_BALL_POSITION = Vec3(-1, 10, -1)
-print(type(INIT_BALL_POSITION))
 local K = 0.01 -- Adjust this constant based on the desired curve effect
 
 local function calculateMagnusForce(ball_collider)
@@ -146,8 +145,8 @@ function lovr.load()
         end
     end
     -- TODO If not separate proj, LOAD if client mode on.
-    MY_CURSOR = lovr.mouse.newCursor('res/cursor.png', 20, 20)
-    lovr.mouse.setCursor(MY_CURSOR)
+    my_cursor_image = lovr.mouse.newCursor('res/cursor.png', 20, 20)
+    lovr.mouse.setCursor(my_cursor_image)
 end
 
 local function updateCams()
@@ -306,13 +305,13 @@ function lovr.draw(pass)
     lockMouse()
     -- GUI CODE
     pass:setProjection(1, mat4():orthographic(pass:getDimensions()))
-    UI2D.Begin("Pose", 0, 0)
-    if UI2D.RadioButton("X", axis == 1) then axis = 1 end
-    UI2D.SameLine()
-    if UI2D.RadioButton("Y", axis == 2) then axis = 2 end
-    UI2D.SameLine()
-    if UI2D.RadioButton("Z", axis == 3) then axis = 3 end
-    UI2D.End(pass)
+    -- UI2D.Begin("Pose", 0, 0)
+    -- if UI2D.RadioButton("X", axis == 1) then axis = 1 end
+    -- UI2D.SameLine()
+    -- if UI2D.RadioButton("Y", axis == 2) then axis = 2 end
+    -- UI2D.SameLine()
+    -- if UI2D.RadioButton("Z", axis == 3) then axis = 3 end
+    -- UI2D.End(pass)
     local ui_passes = UI2D.RenderFrame(pass)
     -- GUI CODE
 
@@ -376,7 +375,6 @@ function lovr.wheelmoved(dx, dy)
     UI2D.WheelMoved(dx, dy)
     cam.wheelmoved(dx, dy)
     turn_cam.wheelmoved(dx, dy)
-
     if not UI2D.HasMouse() then
         -- something
     end
@@ -395,8 +393,8 @@ function lovr.keyreleased(key, scancode, repeating)
     if key == "g" then
         track_cursor = not track_cursor
     end
-    if key == SHOT_KEY then
-        player.shot_key_released = true
+    if key == "k" then
+        print("k")
     end
 end
 

@@ -13,10 +13,54 @@ phywire.options.wireframe = true
 local server = {
     address = 'localhost:6750',
     max_peers = 32,
-    channel_count = 2, -- 1 for "unsequenced", 2 for "reliable"
+    channel_count = 3, -- 0 for "unsequenced", 1 for "unreliable", 2 for "reliable"
     host = nil,
     frame = 0,
 }
+
+local channel = {
+    unsequenced = 0,
+    unreliable = 1,
+    reliable = 2,
+}
+
+--[[
+local input = {
+    type = protocol.cts.input,
+    last_received_frame = nil,
+    id = nil,
+
+    window_width = 0,
+    window_height = 0,
+
+    mouse_x = 0,
+    mouse_y = 0,
+    mouse_dx = 0,
+    mouse_dy = 0,
+
+    wheel_moved_dx = 0,
+    wheel_moved_dy = 0,
+
+    lmb_pressed = false,
+    rmb_pressed = false,
+    mmb_pressed = false,
+
+    jump_button_pressed = false,
+    header_button_pressed = false,
+    slide_button_pressed = false,
+    focus_button_pressed = false,
+    zoom_in_button_pressed = false,
+    zoom_out_button_pressed = false,
+    look_right_button_pressed = false,
+    look_left_button_pressed = false,
+    move_camera_up_button_pressed = false,
+    move_camera_down_button_pressed = false,
+    move_camera_higher_button_pressed = false,
+    move_camera_lower_button_pressed = false,
+    increase_fov_button_pressed = false,
+    decrease_fov_button_pressed = false,
+}
+]]
 
 local playerexample = {
     status = "", -- occupied free
@@ -55,7 +99,7 @@ end
 
 function lovr.load()
     print("Starting as server...")
-    server.host = enet.host_create(server.address, server.max_peers)
+    server.host = enet.host_create(server.address, server.max_peers, server.channel_count)
 
     -- Create world
     lovr.graphics.setBackgroundColor(0x87ceeb)
@@ -72,7 +116,7 @@ end
 
 local function handleAuthEvent(peer)
     local free_id = getFreeId(players)
-    peer:send(buf.encode({ type = protocol.cts.input, id = free_id }))
+    peer:send(buf.encode({ type = protocol.cts.input, id = free_id }), channel.reliable, "reliable")
     players[free_id].status = "occupied"
     players[free_id].peer = peer
 end
@@ -113,7 +157,7 @@ local function handleIncomingEvents()
     end
 end
 
-local function sendUpdatedSnapshot()
+local function sendUpdatedSnapshot(snapshot)
     -- -- Consider iterating over array of players
     -- for i = 1, server.max_peers do
     --     local peer = server.host:get_peer(i)
@@ -121,9 +165,16 @@ local function sendUpdatedSnapshot()
     --         --peer:send("New frame: " .. tostring(server.frame))
     --     end
     -- end
-    for index, value in ipairs(players) do
-        if value.status == "occupied" and value.peer then
-            value.peer:send(buf.encode({ type = protocol.stc.update, info = "Changed world" }))
+
+
+
+    for index, player in ipairs(players) do
+        if player.status == "occupied" and player.peer then
+            player.peer:send(
+                buf.encode({ type = protocol.stc.update, updated = snapshot }),
+                channel.unsequenced,
+                "unsequenced"
+            )
         end
     end
 end
@@ -136,11 +187,28 @@ function lovr.update(dt)
     -- Run a physical simulation step
     -- Update all objects
 
-
+    for index, player in ipairs(players) do
+        if player.status == "occupied" and player.peer and player.input then
+            if player.input.lmb_pressed then
+                local x, y, z = state.ground:getPosition()
+                state.ground:setPosition(x, y + 0.1, z)
+            end
+            if player.input.rmb_pressed then
+                local x, y, z = state.ground:getPosition()
+                state.ground:setPosition(x, y - 0.1, z)
+            end
+        end
+    end
 
     -- Decide if any client needs a world update and take a snapshot of the current world state
     -- if necessary
-    sendUpdatedSnapshot()
+    local x, y, z = state.ground:getPosition()
+    local snapshot = {
+        ground = {
+            x = x, y = y, z = z
+        }
+    }
+    sendUpdatedSnapshot(snapshot)
 end
 
 function lovr.draw(pass)

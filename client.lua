@@ -88,8 +88,14 @@ local messages = {}
 local server = {
     address = 'localhost:6750',
     max_peers = 32,
-    channel_count = 2, -- 0 for "unsequenced", 1 for "reliable"
+    channel_count = 3, -- 0 for "unsequenced", 1 for "unreliable", 2 for "reliable"
     peer = nil,
+}
+
+local channel = {
+    unsequenced = 0,
+    unreliable = 1,
+    reliable = 2,
 }
 
 -- Data to get from server
@@ -122,8 +128,8 @@ function lovr.load()
     state.ground:setTag("ground")
 
 
-    state.host = enet.host_create(nil, 1, 2)
-    server.peer = state.host:connect(server.address)
+    state.host = enet.host_create(nil, 1, server.channel_count)
+    server.peer = state.host:connect(server.address, server.channel_count)
 end
 
 ------------
@@ -134,7 +140,7 @@ function lovr.update(dt)
 
     local msg = buf.encode(input)
     if server.peer and input.id then
-        server.peer:send(msg)
+        server.peer:send(msg, channel.unsequenced, "unsequenced")
     end
 
 
@@ -153,7 +159,7 @@ function lovr.update(dt)
                 if event.peer ~= server.peer then
                     event.peer:disconnect_now() -- Don't want other clients connecting to this client
                 end
-                event.peer:send(buf.encode({ type = protocol.cts.auth }))
+                event.peer:send(buf.encode({ type = protocol.cts.auth }), channel.reliable, "reliable")
             end
             event = state.host:check_events() -- receive any waiting messages
             count = count + 1
@@ -166,7 +172,7 @@ function lovr.update(dt)
             print("Got id", data.id)
             input.id = data.id
         elseif data.type == protocol.stc.update then
-            -- print(dbg.pretty(data.info))
+            state.ground:setPosition(data.updated.ground.x, data.updated.ground.y, data.updated.ground.z)
         end
     end
     table.clear(messages)

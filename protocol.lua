@@ -10,6 +10,7 @@ return {
     },
     -- from server to client
     stc = {
-        id = 0
+        id = 0,
+        update = 1,
     }
 }

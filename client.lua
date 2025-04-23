@@ -27,12 +27,12 @@ local controls = {
     look_left = "q",
     zoom_in = "y",
     zoom_out = "t",
-    move_camera_up_button_pressed = "h",
-    move_camera_down_button_pressed = "g",
-    move_camera_higher_button_pressed = "n",
-    move_camera_lower_button_pressed = "b",
-    increase_fov_button_pressed = "z",
-    decrease_fov_button_pressed = "c",
+    move_camera_up = "h",
+    move_camera_down = "g",
+    move_camera_higher = "n",
+    move_camera_lower = "b",
+    increase_fov = "z",
+    decrease_fov = "c",
 }
 
 local input = {
@@ -97,6 +97,7 @@ local state = {
     cam = nil,
     turn_cam = nil,
     world = nil,
+    ground = nil,
     host = nil,
 }
 
@@ -107,6 +108,20 @@ function lovr.load()
     UI2D.Init("lovr")
     lovr.graphics.setBackgroundColor(0x87ceeb)
     lovr.mouse.setCursor(cursor_image)
+
+    -- Create world
+    lovr.graphics.setBackgroundColor(0x87ceeb)
+    state.world = lovr.physics.newWorld({ tags = { "ground", "ball", "ball-area", "player" } })
+    state.world:disableCollisionBetween("ball-area", "ball")
+    state.world:disableCollisionBetween("ball-area", "ground")
+    state.world:disableCollisionBetween("ball-area", "player")
+
+    state.ground = state.world:newBoxCollider(vec3(0, -2, 0), vec3(90, 4, 120))
+    state.ground:setFriction(0.2)
+    state.ground:setKinematic(true)
+    state.ground:setTag("ground")
+
+
     state.host = enet.host_create(nil, 1, 2)
     server.peer = state.host:connect(server.address)
 end
@@ -150,6 +165,8 @@ function lovr.update(dt)
         if data.type == protocol.stc.id then
             print("Got id", data.id)
             input.id = data.id
+        elseif data.type == protocol.stc.update then
+            -- print(dbg.pretty(data.info))
         end
     end
     table.clear(messages)
@@ -184,34 +201,20 @@ function lovr.draw(pass)
 
     pass:setColor(0x121212)
     pass:plane(0, 0.01, 0, 90, 120, -math.pi / 2, 1, 0, 0, 'line', 45, 60)
+    phywire.draw(pass, state.world)
 
-    -- phywire.draw(pass, world)
-    -- for i, collider in ipairs(world:getColliders()) do
-    --     local shape = collider:getShapes()[1]
-    --     local shapeType = shape:getType()
-    --     local x, y, z, angle, ax, ay, az = collider:getPose()
-    --     if shapeType == 'box' then
-    --         pass:setColor(0.1, 0.5, 0.1)
-    --         local sx, sy, sz = shape:getDimensions()
-    --         pass:box(x, y, z, sx, sy, sz, angle, ax, ay, az)
-    --     elseif shapeType == 'sphere' then
-    --         pass:setColor(1, 1, 1)
-    --         pass:sphere(x, y, z, shape:getRadius())
-    --     elseif shapeType == "capsule" then
-    --         pass:setColor(0xD0A010)
-    --         pass:capsule(x, y, z, 0.4, 1.4, angle, ax, ay, az)
-    --     end
-    -- end
+    for index, collider in ipairs(state.world:getColliders()) do
+        local tag = collider:getTag()
+        if tag == "ground" then
+            local shape = collider:getShapes()[1]
+            pass:setColor(0.1, 0.5, 0.1)
+            local x, y, z, angle, ax, ay, az = collider:getPose()
+            local sx, sy, sz = shape:getDimensions()
+            pass:box(x, y, z, sx, sy, sz, angle, ax, ay, az)
+        end
+    end
 
-
-    -- pass:setColor(0x40a0ff)
-    -- pass:sphere(0, 0, 0, 0.2)
-    -- pass:sphere(1, 0, 0, 0.2)
-    -- pass:sphere(-1, 0, 0, 0.2)
-
-    -- pass:setColor(1, 1, 1)
-
-    -- GUI CODE
+    -- -- GUI CODE
     table.insert(ui_passes, pass)
     return lovr.graphics.submit(ui_passes)
 end
@@ -253,6 +256,49 @@ function lovr.keyreleased(key, scancode, repeating)
     if key == "x" then
         track_cursor = not track_cursor
     end
+
+    if key == controls.jump then
+        input.jump_button_pressed = false
+    end
+    if key == controls.header then
+        input.header_button_pressed = false
+    end
+    if key == controls.slide then
+        input.slide_button_pressed = false
+    end
+    if key == controls.focus then
+        input.focus_button_pressed = false
+    end
+    if key == controls.zoom_in then
+        input.zoom_in_button_pressed = false
+    end
+    if key == controls.zoom_out then
+        input.zoom_out_button_pressed = false
+    end
+    if key == controls.look_right then
+        input.look_right_button_pressed = false
+    end
+    if key == controls.look_left then
+        input.look_left_button_pressed = false
+    end
+    if key == controls.move_camera_up then
+        input.move_camera_up_button_pressed = false
+    end
+    if key == controls.move_camera_down then
+        input.move_camera_down_button_pressed = false
+    end
+    if key == controls.move_camera_higher then
+        input.move_camera_higher_button_pressed = false
+    end
+    if key == controls.move_camera_lower then
+        input.move_camera_lower_button_pressed = false
+    end
+    if key == controls.increase_fov then
+        input.increase_fov_button_pressed = false
+    end
+    if key == controls.decrease_fov then
+        input.decrease_fov_button_pressed = false
+    end
 end
 
 function lovr.keypressed(key, scancode, repeating)
@@ -260,22 +306,48 @@ function lovr.keypressed(key, scancode, repeating)
     if key == 'escape' then
         lovr.event.quit()
     end
-
-
-    input.jump_button_pressed = true
-    input.header_button_pressed = true
-    input.slide_button_pressed = true
-    input.focus_button_pressed = true
-    input.zoom_in_button_pressed = true
-    input.zoom_out_button_pressed = true
-    input.look_right_button_pressed = true
-    input.look_left_button_pressed = true
-    input.move_camera_up_button_pressed = true
-    input.move_camera_down_button_pressed = true
-    input.move_camera_higher_button_pressed = true
-    input.move_camera_lower_button_pressed = true
-    input.increase_fov_button_pressed = true
-    input.decrease_fov_button_pressed = true
+    if key == controls.jump then
+        input.jump_button_pressed = true
+    end
+    if key == controls.header then
+        input.header_button_pressed = true
+    end
+    if key == controls.slide then
+        input.slide_button_pressed = true
+    end
+    if key == controls.focus then
+        input.focus_button_pressed = true
+    end
+    if key == controls.zoom_in then
+        input.zoom_in_button_pressed = true
+    end
+    if key == controls.zoom_out then
+        input.zoom_out_button_pressed = true
+    end
+    if key == controls.look_right then
+        input.look_right_button_pressed = true
+    end
+    if key == controls.look_left then
+        input.look_left_button_pressed = true
+    end
+    if key == controls.move_camera_up then
+        input.move_camera_up_button_pressed = true
+    end
+    if key == controls.move_camera_down then
+        input.move_camera_down_button_pressed = true
+    end
+    if key == controls.move_camera_higher then
+        input.move_camera_higher_button_pressed = true
+    end
+    if key == controls.move_camera_lower then
+        input.move_camera_lower_button_pressed = true
+    end
+    if key == controls.increase_fov then
+        input.increase_fov_button_pressed = true
+    end
+    if key == controls.decrease_fov then
+        input.decrease_fov_button_pressed = true
+    end
 end
 
 function lovr.textinput(text, code)

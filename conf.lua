@@ -17,9 +17,9 @@ end
 ---@diagnostic disable: duplicate-set-field
 function lovr.conf(t)
     if mode == MODE.CLIENT then
-        t.modules.headset = false
+        t.modules.headset = true -- TODO: CHANGE TO TRUE WHEN CAMERA WILL SYNC WITH SERVER
     elseif mode == MODE.SERVER then
-        t.modules.headset = false -- TODO: CHANGE TO TRUE WHEN CAMERA WILL SYNC WITH SERVER
+        t.modules.headset = true
     end
 
     t.window.fullscreentype = "desktop" -- Choose between "desktop" fullscreen or "exclusive" fullscreen mode (string)

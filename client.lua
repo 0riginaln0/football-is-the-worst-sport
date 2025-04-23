@@ -195,8 +195,8 @@ end
 function lovr.draw(pass)
     lockMouse()
     -- GUI CODE
-    pass:setProjection(1, mat4():orthographic(pass:getDimensions()))
-    local ui_passes = UI2D.RenderFrame(pass)
+    -- pass:setProjection(1, mat4():orthographic(pass:getDimensions()))
+    -- local ui_passes = UI2D.RenderFrame(pass)
     -- GUI CODE
 
     pass:setColor(0x121212)
@@ -215,8 +215,8 @@ function lovr.draw(pass)
     end
 
     -- -- GUI CODE
-    table.insert(ui_passes, pass)
-    return lovr.graphics.submit(ui_passes)
+    -- table.insert(ui_passes, pass)
+    -- return lovr.graphics.submit(ui_passes)
 end
 
 function lovr.quit()

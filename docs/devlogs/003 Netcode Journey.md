@@ -1,4 +1,22 @@
-- [Prefrace](#prefrace)
+# Prefrase
+
+This article should have been written yesterday, but I had a great five hour multiplayer session in Worms Ultimate Mayhem.
+
+Which is kind of related, because
+1. Worms Ultimate Mayhem uses Lua
+2. In this post, I'll talk about how I prepared my game for multiplayer!
+
+<div style="display: flex; justify-content: center; align-items: center; gap: 20px;">
+    <div style="height: 300px;">
+        <img src="../res/Worms Ultimate Mayhem loading screen.jpg" alt="Worms Ultimate Mayhem loading screen" style="height: 100%; width: auto;">
+    </div>
+    <div style="height: 300px;">
+        <img src="../res/multiplayer in a nutshell.jpg" alt="Multiplayer in a nutshell" style="height: 100%; width: auto;">
+    </div>
+</div>
+
+
+- [Prefrase](#prefrase)
 - [Starting point](#starting-point)
 - [ENet library overview](#enet-library-overview)
   - [UDP, TCP and something in-between](#udp-tcp-and-something-in-between)
@@ -21,25 +39,6 @@
     - [Server update loop](#server-update-loop)
 - [Outro](#outro)
 - [Resources](#resources)
-
-
-
-# Prefrace
-
-This article should have been written yesterday, but I had a great five hour multiplayer session in Worms Ultimate Mayhem.
-
-Which is kind of related, because
-1. Worms Ultimate Mayhem uses Lua
-2. In this post, I'll talk about how I prepared my game for multiplayer!
-
-<div style="display: flex; justify-content: center; align-items: center; gap: 20px;">
-    <div style="height: 300px;">
-        <img src="../res/Worms Ultimate Mayhem loading screen.jpg" alt="Worms Ultimate Mayhem loading screen" style="height: 100%; width: auto;">
-    </div>
-    <div style="height: 300px;">
-        <img src="../res/multiplayer in a nutshell.jpg" alt="Multiplayer in a nutshell" style="height: 100%; width: auto;">
-    </div>
-</div>
 
 # Starting point
 
@@ -367,7 +366,7 @@ The key points here is that we call `host:service()` which *Wait for events, sen
 
 When we received an event, we handle it based on it's type and then call `host:check_events()` which *Checks for any queued events and dispatches one if available. Returns the associated event if something was dispatched*.
 
-In case we get a LOT of events we could stuck forever in a while loop. There fore we use a counter that limits the while loop, so after we handled N amount of events we exit it.
+In case we get a LOT of events we could stuck forever in a while loop. Therefore we use a counter that limits the while loop, so after we handled N amount of events we exit it.
 
 And after handling events, we read them one by one and applying them to our world state.
 
@@ -465,5 +464,6 @@ For the current state of my game - prototype - this netcode is fine, because it'
 - Official ENet documentation http://enet.bespin.org/
 - Documentation of enet bindings for Lua https://leafo.net/lua-enet/
 - Lua extended enet bindings documentation https://love2d.org/wiki/lua-enet
+- LuaJIT serializing https://luajit.org/ext_buffer.html#serialize
 - LÖVR framework documentation https://lovr.org/docs/
 

@@ -460,7 +460,7 @@ For the current state of my game - prototype - this netcode is fine, because it'
 
 # Resources
 
-- Valve article on multiplayer networks (multiplayer) https://developer.valvesoftware.com/wiki/Source_Multiplayer_Networking
+- Valve article on multiplayer networks https://developer.valvesoftware.com/wiki/Source_Multiplayer_Networking
 - Official ENet documentation http://enet.bespin.org/
 - Documentation of enet bindings for Lua https://leafo.net/lua-enet/
 - Lua extended enet bindings documentation https://love2d.org/wiki/lua-enet

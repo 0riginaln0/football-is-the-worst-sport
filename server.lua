@@ -24,44 +24,6 @@ local channel = {
     reliable = 2,
 }
 
---[[
-local input = {
-    type = protocol.cts.input,
-    last_received_frame = nil,
-    id = nil,
-
-    window_width = 0,
-    window_height = 0,
-
-    mouse_x = 0,
-    mouse_y = 0,
-    mouse_dx = 0,
-    mouse_dy = 0,
-
-    wheel_moved_dx = 0,
-    wheel_moved_dy = 0,
-
-    lmb_pressed = false,
-    rmb_pressed = false,
-    mmb_pressed = false,
-
-    jump_button_pressed = false,
-    header_button_pressed = false,
-    slide_button_pressed = false,
-    focus_button_pressed = false,
-    zoom_in_button_pressed = false,
-    zoom_out_button_pressed = false,
-    look_right_button_pressed = false,
-    look_left_button_pressed = false,
-    move_camera_up_button_pressed = false,
-    move_camera_down_button_pressed = false,
-    move_camera_higher_button_pressed = false,
-    move_camera_lower_button_pressed = false,
-    increase_fov_button_pressed = false,
-    decrease_fov_button_pressed = false,
-}
-]]
-
 local playerexample = {
     status = "", -- occupied free
     input = {},

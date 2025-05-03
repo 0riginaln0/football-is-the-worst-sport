@@ -1,4 +1,3 @@
----@diagnostic disable: lowercase-global
 local ffi = require 'ffi'
 local C = ffi.os == 'Windows' and ffi.load('glfw3') or ffi.C
 local C_str = ffi.string
@@ -23,7 +22,7 @@ ffi.cdef [[
 
 	typedef struct GLFWwindow GLFWwindow;
 	GLFWwindow* os_get_glfw_window(void);
-
+	
 	typedef struct GLFWmonitor GLFWmonitor;
 	GLFWmonitor** glfwGetMonitors(int *count);
 	GLFWmonitor* glfwGetWindowMonitor(GLFWwindow* window);
@@ -34,41 +33,41 @@ ffi.cdef [[
 	const GLFWvidmode* glfwGetVideoMode(GLFWmonitor* monitor);
 	void glfwSetWindowMonitor(GLFWwindow* window, GLFWmonitor* monitor, int xpos, int ypos, int width, int height, int refreshRate);
 	void glfwGetMonitorWorkarea(GLFWmonitor *monitor, int *xpos, int *ypos, int *width, int *height);
-
+	
 	// icon
 	void glfwSetWindowIcon(GLFWwindow* window, int count, const GLFWimage *images);
-
+	
 	// attributes
 	void glfwSetWindowAttrib(GLFWwindow* window, int attrib, int value); //+
 	int glfwGetWindowAttrib(GLFWwindow* window, int attrib); //+
-
+	
 	// size & limits
 	void glfwSetWindowSize(GLFWwindow* window, int width, int height); //-
 	void glfwGetWindowSize(GLFWwindow* window, int *width, int *height); //-
 	void glfwSetWindowSizeLimits(GLFWwindow* window, int minwidth, int minheight, int maxwidth, int maxheight); //-
-
+	
 	// position
 	void glfwSetWindowPos(GLFWwindow* window, int xpos, int ypos);
 	void glfwGetWindowPos(GLFWwindow* window, int *xpos, int *ypos);
-
+	
 	// minimize maximize restore
 	void glfwMaximizeWindow(GLFWwindow* window);
 	void glfwIconifyWindow(GLFWwindow *window);
 	void glfwRestoreWindow(GLFWwindow *window);
-
+	
 	// title
 	void glfwSetWindowTitle(GLFWwindow* window, const char* title);
-
+	
 	// visible
 	void glfwShowWindow(GLFWwindow* window);
 	void glfwHideWindow(GLFWwindow* window);
-
+	
 	// focus
 	void glfwFocusWindow(GLFWwindow* window);
-
+	
 	// attention
 	void glfwRequestWindowAttention(GLFWwindow* window);
-
+	
 	// opacity
 	void glfwSetWindowOpacity(GLFWwindow* window, float opacity);
 	float glfwGetWindowOpacity(GLFWwindow* window);
@@ -84,8 +83,8 @@ ffi.cdef [[
 	GLFWwindowposfun glfwSetWindowPosCallback(GLFWwindow* window, GLFWwindowposfun callback);
 
 	typedef void(* GLFWdropfun) (GLFWwindow*, int, const char *[]);
-	GLFWdropfun glfwSetDropCallback(GLFWwindow* window, GLFWdropfun callback);
-
+	GLFWdropfun glfwSetDropCallback(GLFWwindow* window, GLFWdropfun callback);	
+	
 ]]
 local W = ffi.C.os_get_glfw_window()
 local window = {}

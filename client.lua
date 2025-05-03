@@ -13,7 +13,7 @@ phywire.options.show_joints = true     -- show joints between colliders
 phywire.options.show_contacts = true   -- show collision contacts (quite inefficient, triples the needed collision computations)
 phywire.options.wireframe = true
 UI2D = require 'lib.ui2d.ui2d'
-local enet = require("enet")
+local enet = require "enet"
 local protocol = require 'protocol'
 local buf = require 'string.buffer'
 table.clear = require 'table.clear'
@@ -35,6 +35,12 @@ local controls = {
     decrease_fov = "c",
 }
 
+---@class PlayerInput
+---@field type ClientToServerMessage
+---@field last_received_frame number|nil
+---@field id number|nil
+---@field window_width number
+---@field window_height number
 local input = {
     type = protocol.cts.input,
     last_received_frame = nil,
@@ -249,15 +255,20 @@ function lovr.wheelmoved(dx, dy)
     end
 end
 
+local f11presses = 0
 function lovr.keyreleased(key, scancode, repeating)
     UI2D.KeyReleased()
     if key == "f11" then
+        f11presses = f11presses + 1
         local fullscreen, fullscreentype = lovr.window.getFullscreen()
-        lovr.window.setFullscreen(not fullscreen, fullscreentype or "desktop")
+        print(f11presses, " fullscreen:", fullscreen, "fullscreentype:", fullscreentype)
+        lovr.window.setFullscreen(not fullscreen, "exclusive")
     end
     if key == "f10" then
         lock_mouse = not lock_mouse
-        -- lovr.mouse.setRelativeMode(not lovr.mouse.getRelativeMode())
+    end
+    if key == "f9" then
+        lovr.mouse.setRelativeMode(not lovr.mouse.getRelativeMode())
     end
     if key == "x" then
         track_cursor = not track_cursor

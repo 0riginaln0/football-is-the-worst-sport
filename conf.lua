@@ -3,7 +3,7 @@ local MODE = {
     SERVER = 1
 }
 
-local mode = nil
+local mode = MODE.CLIENT
 
 for _, arg in ipairs(arg) do
     if arg == "--server" then
@@ -17,22 +17,22 @@ end
 ---@diagnostic disable: duplicate-set-field
 function lovr.conf(t)
     if mode == MODE.CLIENT then
-        t.modules.headset = true -- TODO: CHANGE TO TRUE WHEN CAMERA WILL SYNC WITH SERVER
+        t.modules.headset = false -- TODO: CHANGE TO TRUE WHEN CAMERA WILL SYNC WITH SERVER
     elseif mode == MODE.SERVER then
         t.modules.headset = true
     end
 
-    t.window.fullscreentype = "desktop" -- Choose between "desktop" fullscreen or "exclusive" fullscreen mode (string)
-    t.window.x = nil                    -- The x-coordinate of the window's position in the specified display (number)
-    t.window.y = nil                    -- The y-coordinate of the window's position in the specified display (number)
-    t.window.minwidth = 1               -- Minimum window width if the window is resizable (number)
-    t.window.minheight = 1              -- Minimum window height if the window is resizable (number)
-    t.window.display = 1                -- Index of the monitor to show the window in (number)
-    t.window.centered = true            -- Align window on the center of the monitor (boolean)
-    t.window.topmost = false            -- Show window on top (boolean)
-    t.window.borderless = false         -- Remove all border visuals from the window (boolean)
-    t.window.resizable = true           -- Let the window be user-resizable (boolean)
-    t.window.opacity = 1                -- Window opacity value (number)
+    t.window.fullscreentype = nil -- Choose between "desktop" fullscreen or "exclusive" fullscreen mode (string)
+    t.window.x = nil              -- The x-coordinate of the window's position in the specified display (number)
+    t.window.y = nil              -- The y-coordinate of the window's position in the specified display (number)
+    t.window.minwidth = 1         -- Minimum window width if the window is resizable (number)
+    t.window.minheight = 1        -- Minimum window height if the window is resizable (number)
+    t.window.display = 1          -- Index of the monitor to show the window in (number)
+    t.window.centered = false     -- Align window on the center of the monitor (boolean)
+    t.window.topmost = false      -- Show window on top (boolean)
+    t.window.borderless = false   -- Remove all border visuals from the window (boolean)
+    t.window.resizable = true     -- Let the window be user-resizable (boolean)
+    t.window.opacity = 1          -- Window opacity value (number)
     -- t.window.width = 600
     -- t.window.height = 600
 

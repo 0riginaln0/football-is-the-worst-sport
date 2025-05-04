@@ -18,12 +18,6 @@ local server = {
     frame = 0,
 }
 
-local channel = {
-    unsequenced = 0,
-    unreliable = 1,
-    reliable = 2,
-}
-
 local playerexample = {
     status = "", -- occupied free
     input = {},
@@ -74,11 +68,15 @@ function lovr.load()
     state.ground:setFriction(0.2)
     state.ground:setKinematic(true)
     state.ground:setTag("ground")
+
+    -- Create players
 end
 
 local function handleAuthEvent(peer)
     local free_id = getFreeId(players)
-    peer:send(buf.encode({ type = protocol.cts.input, id = free_id }), channel.reliable, "reliable")
+
+    peer:send(buf.encode({ type = protocol.stc.id, id = free_id }), protocol.channel.reliable, "reliable")
+
     players[free_id].status = "occupied"
     players[free_id].peer = peer
 end
@@ -92,10 +90,12 @@ local function handleIncomingEvents()
     while event and count < limit do
         if event.type == "receive" then
             local msg = buf.decode(event.data)
-            if msg and msg.type == protocol.cts.auth then
-                handleAuthEvent(event.peer)
-            elseif msg and msg.type == protocol.cts.input then
-                handleInputEvent(msg)
+            if msg then
+                if msg.type == protocol.cts.auth then
+                    handleAuthEvent(event.peer)
+                elseif msg.type == protocol.cts.input then
+                    handleInputEvent(msg)
+                end
             end
         elseif event.type == "connect" then
             --register player
@@ -134,7 +134,7 @@ local function sendUpdatedSnapshot(snapshot)
         if player.status == "occupied" and player.peer then
             player.peer:send(
                 buf.encode({ type = protocol.stc.update, updated = snapshot }),
-                channel.unsequenced,
+                protocol.channel.unsequenced,
                 "unsequenced"
             )
         end

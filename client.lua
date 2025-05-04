@@ -98,12 +98,6 @@ local server = {
     peer = nil,
 }
 
-local channel = {
-    unsequenced = 0,
-    unreliable = 1,
-    reliable = 2,
-}
-
 -- Data to get from server
 local state = {
     cam = nil,
@@ -146,7 +140,7 @@ function lovr.update(dt)
 
     local msg = buf.encode(input)
     if server.peer and input.id then
-        server.peer:send(msg, channel.unsequenced, "unsequenced")
+        server.peer:send(msg, protocol.channel.unsequenced, "unsequenced")
     end
 
 
@@ -165,7 +159,7 @@ function lovr.update(dt)
                 if event.peer ~= server.peer then
                     event.peer:disconnect_now() -- Don't want other clients connecting to this client
                 end
-                event.peer:send(buf.encode({ type = protocol.cts.auth }), channel.reliable, "reliable")
+                event.peer:send(buf.encode({ type = protocol.cts.auth }), protocol.channel.reliable, "reliable")
             end
             event = state.host:check_events() -- receive any waiting messages
             count = count + 1
@@ -174,11 +168,11 @@ function lovr.update(dt)
 
     -- Set updated world info
     for index, data in ipairs(messages) do
-        if data.type == protocol.stc.id then
+        if data.type == protocol.stc.update then
+            state.ground:setPosition(data.updated.ground.x, data.updated.ground.y, data.updated.ground.z)
+        elseif data.type == protocol.stc.id then
             print("Got id", data.id)
             input.id = data.id
-        elseif data.type == protocol.stc.update then
-            state.ground:setPosition(data.updated.ground.x, data.updated.ground.y, data.updated.ground.z)
         end
     end
     table.clear(messages)

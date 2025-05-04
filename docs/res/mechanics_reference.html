@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>mechanics_reference.md</title>
+<meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+
+<style>
+/* https://github.com/microsoft/vscode/blob/master/extensions/markdown-language-features/media/markdown.css */
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
+body {
+	font-family: var(--vscode-markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif);
+	font-size: var(--vscode-markdown-font-size, 14px);
+	padding: 0 26px;
+	line-height: var(--vscode-markdown-line-height, 22px);
+	word-wrap: break-word;
+}
+
+#code-csp-warning {
+	position: fixed;
+	top: 0;
+	right: 0;
+	color: white;
+	margin: 16px;
+	text-align: center;
+	font-size: 12px;
+	font-family: sans-serif;
+	background-color:#444444;
+	cursor: pointer;
+	padding: 6px;
+	box-shadow: 1px 1px 1px rgba(0,0,0,.25);
+}
+
+#code-csp-warning:hover {
+	text-decoration: none;
+	background-color:#007acc;
+	box-shadow: 2px 2px 2px rgba(0,0,0,.25);
+}
+
+body.scrollBeyondLastLine {
+	margin-bottom: calc(100vh - 22px);
+}
+
+body.showEditorSelection .code-line {
+	position: relative;
+}
+
+body.showEditorSelection .code-active-line:before,
+body.showEditorSelection .code-line:hover:before {
+	content: "";
+	display: block;
+	position: absolute;
+	top: 0;
+	left: -12px;
+	height: 100%;
+}
+
+body.showEditorSelection li.code-active-line:before,
+body.showEditorSelection li.code-line:hover:before {
+	left: -30px;
+}
+
+.vscode-light.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.15);
+}
+
+.vscode-light.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(0, 0, 0, 0.40);
+}
+
+.vscode-light.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-dark.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.4);
+}
+
+.vscode-dark.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 255, 255, 0.60);
+}
+
+.vscode-dark.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+.vscode-high-contrast.showEditorSelection .code-active-line:before {
+	border-left: 3px solid rgba(255, 160, 0, 0.7);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line:hover:before {
+	border-left: 3px solid rgba(255, 160, 0, 1);
+}
+
+.vscode-high-contrast.showEditorSelection .code-line .code-line:hover:before {
+	border-left: none;
+}
+
+img {
+	max-width: 100%;
+	max-height: 100%;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+a:focus,
+input:focus,
+select:focus,
+textarea:focus {
+	outline: 1px solid -webkit-focus-ring-color;
+	outline-offset: -1px;
+}
+
+hr {
+	border: 0;
+	height: 2px;
+	border-bottom: 2px solid;
+}
+
+h1 {
+	padding-bottom: 0.3em;
+	line-height: 1.2;
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+h1, h2, h3 {
+	font-weight: normal;
+}
+
+table {
+	border-collapse: collapse;
+}
+
+table > thead > tr > th {
+	text-align: left;
+	border-bottom: 1px solid;
+}
+
+table > thead > tr > th,
+table > thead > tr > td,
+table > tbody > tr > th,
+table > tbody > tr > td {
+	padding: 5px 10px;
+}
+
+table > tbody > tr + tr > td {
+	border-top: 1px solid;
+}
+
+blockquote {
+	margin: 0 7px 0 5px;
+	padding: 0 16px 0 10px;
+	border-left-width: 5px;
+	border-left-style: solid;
+}
+
+code {
+	font-family: Menlo, Monaco, Consolas, "Droid Sans Mono", "Courier New", monospace, "Droid Sans Fallback";
+	font-size: 1em;
+	line-height: 1.357em;
+}
+
+body.wordWrap pre {
+	white-space: pre-wrap;
+}
+
+pre:not(.hljs),
+pre.hljs code > div {
+	padding: 16px;
+	border-radius: 3px;
+	overflow: auto;
+}
+
+pre code {
+	color: var(--vscode-editor-foreground);
+	tab-size: 4;
+}
+
+/** Theming */
+
+.vscode-light pre {
+	background-color: rgba(220, 220, 220, 0.4);
+}
+
+.vscode-dark pre {
+	background-color: rgba(10, 10, 10, 0.4);
+}
+
+.vscode-high-contrast pre {
+	background-color: rgb(0, 0, 0);
+}
+
+.vscode-high-contrast h1 {
+	border-color: rgb(0, 0, 0);
+}
+
+.vscode-light table > thead > tr > th {
+	border-color: rgba(0, 0, 0, 0.69);
+}
+
+.vscode-dark table > thead > tr > th {
+	border-color: rgba(255, 255, 255, 0.69);
+}
+
+.vscode-light h1,
+.vscode-light hr,
+.vscode-light table > tbody > tr + tr > td {
+	border-color: rgba(0, 0, 0, 0.18);
+}
+
+.vscode-dark h1,
+.vscode-dark hr,
+.vscode-dark table > tbody > tr + tr > td {
+	border-color: rgba(255, 255, 255, 0.18);
+}
+
+</style>
+
+<style>
+/* Tomorrow Theme */
+/* http://jmblog.github.com/color-themes-for-google-code-highlightjs */
+/* Original theme - https://github.com/chriskempson/tomorrow-theme */
+
+/* Tomorrow Comment */
+.hljs-comment,
+.hljs-quote {
+	color: #8e908c;
+}
+
+/* Tomorrow Red */
+.hljs-variable,
+.hljs-template-variable,
+.hljs-tag,
+.hljs-name,
+.hljs-selector-id,
+.hljs-selector-class,
+.hljs-regexp,
+.hljs-deletion {
+	color: #c82829;
+}
+
+/* Tomorrow Orange */
+.hljs-number,
+.hljs-built_in,
+.hljs-builtin-name,
+.hljs-literal,
+.hljs-type,
+.hljs-params,
+.hljs-meta,
+.hljs-link {
+	color: #f5871f;
+}
+
+/* Tomorrow Yellow */
+.hljs-attribute {
+	color: #eab700;
+}
+
+/* Tomorrow Green */
+.hljs-string,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition {
+	color: #718c00;
+}
+
+/* Tomorrow Blue */
+.hljs-title,
+.hljs-section {
+	color: #4271ae;
+}
+
+/* Tomorrow Purple */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: #8959a8;
+}
+
+.hljs {
+	display: block;
+	overflow-x: auto;
+	color: #4d4d4c;
+	padding: 0.5em;
+}
+
+.hljs-emphasis {
+	font-style: italic;
+}
+
+.hljs-strong {
+	font-weight: bold;
+}
+</style>
+
+<style>
+/*
+ * Markdown PDF CSS
+ */
+
+ body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", "Ubuntu", "Droid Sans", sans-serif, "Meiryo";
+	padding: 0 12px;
+}
+
+pre {
+	background-color: #f8f8f8;
+	border: 1px solid #cccccc;
+	border-radius: 3px;
+	overflow-x: auto;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+pre:not(.hljs) {
+	padding: 23px;
+	line-height: 19px;
+}
+
+blockquote {
+	background: rgba(127, 127, 127, 0.1);
+	border-color: rgba(0, 122, 204, 0.5);
+}
+
+.emoji {
+	height: 1.4em;
+}
+
+code {
+	font-size: 14px;
+	line-height: 19px;
+}
+
+/* for inline code */
+:not(pre):not(.hljs) > code {
+	color: #C9AE75; /* Change the old color so it seems less like an error */
+	font-size: inherit;
+}
+
+/* Page Break : use <div class="page"/> to insert page break
+-------------------------------------------------------- */
+.page {
+	page-break-after: always;
+}
+
+</style>
+
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</head>
+<body>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: document.body.classList.contains('vscode-dark') || document.body.classList.contains('vscode-high-contrast')
+          ? 'dark'
+          : 'default'
+    });
+  </script>
+<ul>
+<li><a href="#controlling-your-player-basics">Controlling your player. Basics.</a>
+<ul>
+<li><a href="#movement">Movement:</a></li>
+<li><a href="#kickingheading-the-ball">Kicking/heading the ball:</a></li>
+<li><a href="#ball-curves">Ball curves:</a></li>
+<li><a href="#special-actions">Special actions:</a></li>
+</ul>
+</li>
+<li><a href="#some-tips-for-begginers">Some tips for begginers.</a>
+<ul>
+<li><a href="#stealing-the-ball-from-opponents">Stealing the ball from opponents.</a></li>
+<li><a href="#becoming-a-goalkeeper-hero">Becoming a goalkeeper hero.</a></li>
+</ul>
+</li>
+<li><a href="#referee-modes">Referee modes.</a>
+<ul>
+<li><a href="#realistic-fouls-referee">Realistic fouls referee:</a></li>
+</ul>
+</li>
+<li><a href="#foul-points-or-give-me-better-name-p">Foul points (or give me better name <img class="emoji" alt="stuck_out_tongue" src="data:image/png;base64,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" />)</a>
+<ul>
+<li><a href="#what-is-it">What is it?</a></li>
+<li><a href="#why-do-i-need-them">Why do I need them?</a></li>
+<li><a href="#what-do-i-get-for-them">What do I get for them?</a></li>
+<li><a href="#how-many-foul-points-do-i-need">How many foul points do I need?</a></li>
+<li><a href="#how-long-exactly-will-i-stay-there">How long exactly will I stay there?</a></li>
+<li><a href="#if-they-are-reseted-back-to-nothing-how-it-is-even-possible-to-get-more-then-10">If they are reseted back to nothing, how it is even possible to get more then 10?</a></li>
+<li><a href="#15-foul-points-for-a-single-foul-what-the-hell">15 foul points for a single foul? What the hell?</a></li>
+<li><a href="#but-still-15-for-one-foul">But still 15? For one foul?</a></li>
+<li><a href="#this-sounds-complicated-list-all-the-conditions-otherwise-i-will-think-they-are-just-numbers-picked-by-referee-randomly">This sounds complicated. List all the conditions, otherwise I will think they are just numbers picked by referee randomly...</a></li>
+<li><a href="#foul-points---that-feels-unnatural-traditional-cards-should-be-used-instead-of-this-football-abomination">Foul points - that feels unnatural. Traditional cards should be used instead of this football abomination...</a></li>
+<li><a href="#people-will-try-to-get-away-from-penalty-bench-wont-they">People will try to get away from penalty bench, won't they?</a></li>
+<li><a href="#some-final-advice-maybe">Some final advice maybe?</a></li>
+</ul>
+</li>
+</ul>
+<h1 id="controlling-your-player-basics">Controlling your player. Basics.</h1>
+<h2 id="movement">Movement:</h2>
+<p>The player's movement is controlled by mouse - your player will run after your mouse's cursor. Depending on your 'slow-moving' settings, the closer the mouse cursor is to your player, the slower he will move. Slow moving describes the screen distance between your mouse cursor and your player at which he will start to move slower. This option can be edited in 'Match Controls' settings of MatchView's menu - the higher the value is, the bigger slowmoving area size will be.</p>
+<h2 id="kickingheading-the-ball">Kicking/heading the ball:</h2>
+<p>To kick/head the ball you use mouse buttons:</p>
+<ul>
+<li>right mouse button is for quick kick/header - the further the cursor is, the stronger the kick/header will be. With right mouse button the ball will be always brought towards the ground.</li>
+<li>left mouse button is for setting the power of your incoming kick, the ball will be kicked once you release the gathered power by realising the mouse button. Obviously the more gathered power, the stronger the kick. The closer mouse cursor is (to your player), the higher the ball fill fly.</li>
+<li>right + left mouse button - for soft headers when the ball is high in air; this type of action is good for clearing ball from crosses or winning header passes, not very good for shooting (the ball is flies slowly and high, usualy over the cross bar). If the ball happens to be too low then a normal right mouse button kick will be produced.
+Note, that when you hold any of the mouse buttons, your running direction and speed will become locked untill you release the button you were holding.</li>
+</ul>
+<h2 id="ball-curves">Ball curves:</h2>
+<p>You can curve the ball for both of the kick types. To do so you need to quickly move your mouse cursor to the left/right corresponding to ball movement's direction. You have very few time to trigger the curve, so it can be hard without some practise.</p>
+<h2 id="special-actions">Special actions:</h2>
+<p>You can trigger a special action by pressing a corresponding key. You can choose one of the fallowing actions:</p>
+<ul>
+<li>slide tackle - get a temporary accelerated movement for given direction to tackle the opponent or hit the ball before he reaches it. The ball will move same direction as your slide*. The slide won't affect balls that are too high to reach.</li>
+<li>diving header - get a temporary accelerated movement for given direction to hit the loose high ball before your opponent interacts with it. The ball will fly thesame direction as your diving header*. The diving header won't affect balls that are either too high or too low, or those controled by other players (you can't tackle opponents with this action).</li>
+<li>jump - use it to interact with balls that normally would be slightly too high for you to reach. You can also use it to avoid being knocked down by your oppoent's slide tackles.</li>
+<li>goalkeeper save (if you are goalkeper) - get a temporary accelerated movement for given direction to make an astonishing save from a certain goal. You can control ball's direction with your mouse cursor. Note, that this action won't affect ball if it is outside your penalty area.</li>
+<li>goalkeeper charge (if you are goalkeeper) - get a temporary accelerated movement towards given direction to tackle down opponent in the goalkeeper style. This action doesnt let you control the ball's direction though. Note that it won't affect high balls and those that are outside your penalty area. NOTE: this action is to be replaced by auto-save action in near future.</li>
+<li>goalkeeper auto-save (if you are goalkeeper) - by holding auto-save key, your player will automaticaly make short ranged, auto-aimed, instant save attemp when the ball is in neaby; the drawback of this action is that by holding the key you will restrict your movement abilities; also you can't control the ball's movement direction with this auto save action. NOTE: this action will be implemented in near future instead of gk-charge action.</li>
+</ul>
+<p>Also note, that you cant trigger those actions when controlling the ball or right after kicking it.
+You can see/edit key-for-action settings during match in match view menu.</p>
+<h1 id="some-tips-for-begginers">Some tips for begginers.</h1>
+<h2 id="stealing-the-ball-from-opponents">Stealing the ball from opponents.</h2>
+<p>Something that is really annoying for all newcommers - all those failed slide tackles and opponents easily running around them...
+The first thing a new guy would think, is that the slide tackle, as the name points out, is the main and best way to disposses the opponent from the precious ball that he controls. In reality, the slide tackle should be used as last resort. Its tempting to kill the opponent's action and make him eat some grass, but its hard to get the right timing and precision, especialy against experienced opponents. And the punishment for missed slide tackle is very high - you are out of the action for good few seconds, usualy its enough for opponents to use temporary numerical advantage and score.
+But the slide tackle is't the only way to steal the ball. The are two 'safier' methods to dispossses the opponent:</p>
+<ul>
+<li>mouse button tackling - you ought to know that you can kick any ball that is in your reach, even the ones that are controlled by oppoents. The rule is the same as for normal ball kicking. You decide where and how the ball will fly with your mouse cursor (its direction and distance). Both right and left mouse button kicks will work. Of course you need to be close enough to the ball. The controlling opponent will do everything to make sure that you arent. ;D Note, that while holding mouse button for the tackle, you will lock your movement speed and direction. This can be used against you.</li>
+<li>body tackling - this is both softest and least certain method to stop the opponent. Softest, bacause it doesnt require any mouse button or key to be pressed, leaving you with constant full control of your player's movement. Least certain because result can be anything between good and bad for you, depnding on situation, luck, anything. Why is that you ask? Once the ball is in reach of more then one player and none of them tries to kick it, for a short period of time it will become uncontrolable for all players - noone will be able to move that ball around, but will be only able to hit it with kick, slide, etc. Once you get close enough to opponent who controls the ball, you can be sure of only one thing - the opponent will lose the ball control. Thats all. He still might get back to the ball faster and leave you behind, or it can be otherwise. Low cost solutions usualy mean least predictible results. <img class="emoji" alt="stuck_out_tongue" src="data:image/png;base64,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" />
+Decission which tackle type to use is solely up to you. There isn't any good universal method that would usualy work. If you have good eye and quick, precise hand, you might want to use the risky slide tackle and achieve best tackling results with it instead other safier tackling types. It takes time to find out best suited defending style.</li>
+</ul>
+<h2 id="becoming-a-goalkeeper-hero">Becoming a goalkeeper hero.</h2>
+<p>&quot;Pff. The goal is rather small. I just need to make sure nothing gets into it. There's no way I'll be worser then that stupid gk-bot anyway. What simply can go wrong?&quot;
+Oh the temptation. Point at ball, press the 'save' action button, profit. Seems simple, but its not. Here you will find most tricky parts of human goalkeeper job.</p>
+<ul>
+<li>&quot;Dreadfull slow floating balls of doom&quot; - watch out for your timing of triggering save actions. You might start flying too soon and the ball that is very slow and could be easily picked up by simple movement would slowly roll in. You should wait with save and enable it only when you are sure you won't handle the situation without it.</li>
+<li>&quot;Ive got my eye on you&quot; - it is very iportant to keep an eye on opponent not to miss his shooting moment. But don't forget about yourself. Are you sure you haven't unintentionally moved out of your goal while watching the guy with the ball? ;D</li>
+<li>&quot;Ive got that cross&quot; - something that the stupid gk-bot can never master - intercepting crosses. After few succsesful attemps you might feel like a god, but the oppoents dont sleep and learn your gk-style. There are many cross types. Next time they might power-cross the ball in and your interception habit might leave you with empty both hands and goal. Or a fake cross the might catch you off guard and fly into your goal at near post. Also, are you sure you get balls at maximum possible reach-height? Not all players use small sized players. Someone could simply overtake you with simple jump and header the ball in.</li>
+<li>&quot;It was going elsewhere last time I checked...&quot; - an experience that every aspiring goalkeeper has to learn - powerfull shot, certainly going into the corner - you fly there, and yet the ball goes in. Thru the goal's centre. The cursed curves... How to handle them? They can be enabled only right after a shot so you should wait a slight moment untill you know that the ball wont get curved.</li>
+<li>&quot;Press and aim&quot; - Quick reflexes is what separates decent goalkeepers from best ones. But making a fast reflex-save isnt a matter of doing one action. Its two actualy - you aim for the ball, then you press the save button. Don't mix the order. ;D</li>
+<li>&quot;Cursed gravitation&quot; - High balls are the hardest to take. One thing is that high saves are abit slower (you need to sacrifice abit of energy for the jump power). The other thing is the gravity - it changes high saves into low ones, so make sure you don't trigger a save for high ball too soon.
+You should know that being a goalkeeper gives you also some priviliges. You can't be slided down inside your penalty area if the ball can be catched by you (it was last touched by oppoent, or before the richochet off your teammate). Also, you can't be pushed inside your goakeeper area, even if you use small sized player against more massive players.</li>
+</ul>
+<h1 id="referee-modes">Referee modes.</h1>
+<h2 id="realistic-fouls-referee">Realistic fouls referee:</h2>
+<p>As the name shows - every slide that doesn't hit the ball first will most likely be the reason for freekick/penalty.</p>
+<h1 id="foul-points-or-give-me-better-name-stuckouttongue">Foul points (or give me better name <img class="emoji" alt="stuck_out_tongue" src="data:image/png;base64,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" />)</h1>
+<h3 id="what-is-it">What is it?</h3>
+<p>You collect foul points for making fouls.</p>
+<h3 id="why-do-i-need-them">Why do I need them?</h3>
+<p>You don't need them. You don't want them. Avoid them.</p>
+<h3 id="what-do-i-get-for-them">What do I get for them?</h3>
+<p>You get some rest on the sideline (penalty bench). Forced one. A fate you cannot escape once you collect enough foul points.</p>
+<h3 id="how-many-foul-points-do-i-need">How many foul points do I need?</h3>
+<p>10 is enough, although you can get even more. The more you have, the longer you will stay on penalty bench.</p>
+<h3 id="how-long-exactly-will-i-stay-there">How long exactly will I stay there?</h3>
+<p>For 10 foul points you will stay on penalty bench for exactly 10 match minutes (not real time). For 12 foul points you will rest for 12 match minutes. You get the idea. Once your punishment is over, your foul points are set back to zero and you return to game.</p>
+<h3 id="if-they-are-reseted-back-to-nothing-how-it-is-even-possible-to-get-more-then-10">If they are reseted back to nothing, how it is even possible to get more then 10?</h3>
+<p>Some fouls are worth more then other. You can have 9/10 foul points and then commit a foul, that is worth for example 15 foul points. Your result is 24/10 foul points and penalty bench for 24 match minutes.</p>
+<h3 id="15-foul-points-for-a-single-foul-what-the-hell">15 foul points for a single foul? What the hell?</h3>
+<p>In football there are fouls for which referee gives streight red card, right? Usually when a last defender stops an attacker with a foul. Treat streight 15 foul points as a streight red card, with lesser consquences though.</p>
+<h3 id="but-still-15-for-one-foul">But still 15? For one foul?</h3>
+<p>When a foul is commited, referee checks some special conditions, like being last defender, or making a brutal challenge, and gives additional points if these conditions are true. There are even some <em>external</em> conditions which make a foul worth more or less foul points, for example number of your teammates on field.</p>
+<h3 id="this-sounds-complicated-list-all-the-conditions-otherwise-i-will-think-they-are-just-numbers-picked-by-referee-randomly">This sounds complicated. List all the conditions, otherwise I will think they are just numbers picked by referee randomly...</h3>
+<p>Fine.</p>
+<ul>
+<li>For start, every foul is worth 1 point.</li>
+<li>If the player who is fouled doesn't have ball at his feet, it is one additional foul point.</li>
+<li>If the ball was far enough from him (in horizontal line), then there's another foul point (Mr.Referee often calls such situation &quot;late challenge&quot;).</li>
+<li>Furthermore, if the ball was high in the air, then thats again additional points (Mr.Referee will call it &quot;hard / painfull / brutal challenge&quot;).</li>
+<li>If you commit a foul near your own goal, you will get additional one foul point.</li>
+<li>If you were in defence line and made a foul while opponent team had an advantage (for example 3vs2 or even in some cases 2vs2), then you will get points for &quot;taken away the advantage&quot;. Here starts some trickery though. The more players in your team total, the more foul points you will get. To put is it simple, in this case you will get <em>total players in team / 2</em> additional foul points, so if you play 10vs10 match, you will get additional 5 foul points, in standard 5vs5 match, additional 2 foul points will be given (result is rounded down). However if your team have less then 3 players in your team, then you won't get additional points for such foul (players that are already on penalty bench are not counted, same goes for a goalkeeper).</li>
+<li>If you commit a foul as a last man, you get &quot;taken away the clear goal chance&quot; <em>bonus</em>, which means you get as many additional foul points as many players are in your team, so in 10vs10 match you will get 10 additional foul points, a 5vs5 match means additional 5 foul points. If your team has less then 4 players, you won't get additional foul points for this condition though. If your foul causes a penalty kick then you will get away with foul points for this condition - a penalty kick against your team is enough.</li>
+<li>Taking away &quot;advantage&quot; and &quot;clear goal chance&quot; can stack together. You could be last defender, but at the same time you could have two defender teammates nearby against a single attacker (1vs3). You will get additional foul points, but not as many as you would get if it was (1vs1 or 2vs1). Usually in first scenario you will get 7-9 foul points total for a foul (&quot;taken away clear goal chance&quot;), and in second scenario you will collect 10 or more (with the same description).
+All of this conditions can stack, so for a brutal challenge, being last and only defender, just outside your penalty area, in 10vs10 match, you could get even up to 25 foul points. For <em>just</em> one foul.</li>
+</ul>
+<h3 id="foul-points---that-feels-unnatural-traditional-cards-should-be-used-instead-of-this-football-abomination">Foul points - that feels unnatural. Traditional cards should be used instead of this football abomination...</h3>
+<p>This would simply not work in an online football game. You could get lagged and make a red card foul just because of that. Or have a troll teammate who whould intentionally get a red card on match start, then leave laughing while your team needs to play outnumbered the rest of match. Foul points and penalty bench fits much better our internet reality.</p>
+<h3 id="people-will-try-to-get-away-from-penalty-bench-wont-they">People will try to get away from penalty bench, won't they?</h3>
+<p>They will try but it won't help them. Penalty bench punishment is persistent. If you leave match and rejoin, you will continue your punishment untill it is revoked. What is more, if during match you will leave and ask your teammate to take your place (until your punishment is over), he will take your place on penalty bench as well! For obvious reasons this does not apply to public matches.
+Penalty bench for goalkeepers is a special case. They can't just go to sideline and wait, because there must be a goalkkeper in team for match to continue. For this reason they are simply kicked from server and bot gk takes their place (or human subgk if one was set). This is the only case, where after penalty bench sentence team numbers may not decrease. Game cannot just force random player to be a substitute goalkeeper (or should it?), therefore an exception is made and botgk is allowed to play. Of course when the kicked goalkeeper tries to return to match, he resumes his penalty bench visit.</p>
+<h3 id="some-final-advice-maybe">Some final advice maybe?</h3>
+<p>Commit fouls wisely.</p>
+
+</body>
+</html>

@@ -9,6 +9,7 @@ phywire.options.show_angulars = true   -- gizmo displaying the collider's angula
 phywire.options.show_joints = true     -- show joints between colliders
 phywire.options.show_contacts = true   -- show collision contacts (quite inefficient, triples the needed collision computations)
 phywire.options.wireframe = true
+local pl = require 'player'
 
 local server = {
     address = 'localhost:6750',
@@ -70,6 +71,9 @@ function lovr.load()
     state.ground:setTag("ground")
 
     -- Create players
+    for index, slot in ipairs(players) do
+        slot.player = pl.new()
+    end
 end
 
 local function handleAuthEvent(peer)
@@ -133,7 +137,7 @@ local function sendUpdatedSnapshot(snapshot)
     for index, player in ipairs(players) do
         if player.status == "occupied" and player.peer then
             player.peer:send(
-                buf.encode({ type = protocol.stc.update, updated = snapshot }),
+                buf.encode({ type = protocol.stc.update, snapshot = snapshot }),
                 protocol.channel.unsequenced,
                 "unsequenced"
             )

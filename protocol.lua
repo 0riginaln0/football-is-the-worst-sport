@@ -1,10 +1,7 @@
--- types of messages
-
+local m = {}
 
 ---@class ServerUpdateMessage
 ---@field arrayOfPlayers table
-
-local m = {}
 
 ---@enum ClientToServerMessage
 m.cts = {
@@ -19,6 +16,7 @@ m.stc = {
     update = 1,
 }
 
+---@enum MessageChannel
 m.channel = {
     unsequenced = 0,
     unreliable = 1,

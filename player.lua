@@ -37,3 +37,5 @@ end
 function pl.update(player)
 
 end
+
+return pl

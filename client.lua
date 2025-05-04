@@ -169,7 +169,7 @@ function lovr.update(dt)
     -- Set updated world info
     for index, data in ipairs(messages) do
         if data.type == protocol.stc.update then
-            state.ground:setPosition(data.updated.ground.x, data.updated.ground.y, data.updated.ground.z)
+            state.ground:setPosition(data.snapshot.ground.x, data.snapshot.ground.y, data.snapshot.ground.z)
         elseif data.type == protocol.stc.id then
             print("Got id", data.id)
             input.id = data.id

@@ -17,3 +17,22 @@ Depending on your 'slowmoving area radius' settings, the closer the mouse cursor
 
 ![alt text](image.png)
 
+
+# Position
+
+1/2 rule
+
+Position is field by default for all, but when match starts, the server decides who is gonna play gk for the 1st, 2nd half, and additional time 3rd, 4th. And sends a message to chosen peer that it is a goalie. Client receives this message and turns into gk player mode.
+
+Clients can send an "i want to be a goalie for this match" message to the server. And so it will.
+
+
+
+
+# Modelling
+
+Ball
+## Exporting
+When exporting model from Blockbench, check the `Model Export Scale` setting. Adjust `Model Export Scale` to change the scale of your GLTF (File > Preferences > Settings > search for Model Export Scale).
+> By default it is 16, which makes 16 modelling units 1 meter.
+

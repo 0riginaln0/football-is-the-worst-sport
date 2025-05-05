@@ -3,12 +3,13 @@ local buf = require 'string.buffer'
 local protocol = require 'protocol'
 local dbg = require 'lib.debugger'
 local phywire = require 'lib.phywire'
-phywire.options.show_shapes = true     -- draw collider shapes (on by default)
+phywire.options.show_shapes = false    -- draw collider shapes (on by default)
 phywire.options.show_velocities = true -- vector showing direction and magnitude of collider linear velocity
 phywire.options.show_angulars = true   -- gizmo displaying the collider's angular velocity
 phywire.options.show_joints = true     -- show joints between colliders
 phywire.options.show_contacts = true   -- show collision contacts (quite inefficient, triples the needed collision computations)
 phywire.options.wireframe = true
+
 local pl = require 'player'
 
 local server = {
@@ -20,26 +21,65 @@ local server = {
 }
 
 local playerexample = {
-    status = "", -- occupied free
+    status = "",        -- occupied free
+    position = "field", -- "field", "gk"
     input = {},
     peer = nil
 }
 
-local players = {
-    -- 30 entries
-    { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" },
-    { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" },
-    { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" },
-    { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" },
-    { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" },
-    { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" },
+local ballexample = {
+    model = nil,
+    collider = nil,
+    area = nil,
 }
+
+local function createBall(world, x, y, z)
+    x = x or 0
+    y = y or 0
+    z = z or 0
+
+    local newball = {}
+    newball.model = lovr.graphics.newModel("res/ball/football_ball.gltf")
+    newball.collider = world:newSphereCollider(x, y, z, 0.25)
+    newball.collider:setRestitution(0.7)
+    newball.collider:setFriction(0.7)
+    newball.collider:setLinearDamping(0.3)
+    newball.collider:setAngularDamping(0.7)
+    newball.collider:setMass(0.44)
+    newball.collider:setContinuous(true)
+    newball.collider:setTag("ball")
+    newball.area = world:newCylinderCollider(x, y, z, 0.25 * 3, 0.04)
+    newball.area:setKinematic(true)
+    newball.area:setOrientation(math.pi / 2, 2, 0, 0)
+    newball.area:setTag("ball-area")
+    newball.area:getShape():setUserData(newball)
+
+    return newball
+end
+
+local function drawBall(pass, ball)
+    local x, y, z, angle, ax, ay, az = ball.collider:getPose()
+    local scale = 1
+    pass:draw(ball.model, x, y, z, scale, angle, ax, ay, az)
+end
 
 local state = {
     world = nil,
     CONST_DT = 0.015, -- my constant dt, aka "the timestep"
     accumulator = 0,  -- accumulator of time to simulate
-    ground = nil
+    ground = nil,
+    players = {
+        -- 30 entries
+        { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" },
+        { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" },
+        { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" },
+        { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" },
+        { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" },
+        { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" },
+    },
+    balls = {
+        -- 22 entries
+    }
 }
 
 
@@ -71,22 +111,27 @@ function lovr.load()
     state.ground:setTag("ground")
 
     -- Create players
-    for index, slot in ipairs(players) do
+    for index, slot in ipairs(state.players) do
         slot.player = pl.new()
+    end
+
+    -- Create balls
+    for i = 1, 22, 1 do
+        state.balls[i] = createBall(state.world, i, 2 + math.random(1, 4), 0)
     end
 end
 
 local function handleAuthEvent(peer)
-    local free_id = getFreeId(players)
+    local free_id = getFreeId(state.players)
 
     peer:send(buf.encode({ type = protocol.stc.id, id = free_id }), protocol.channel.reliable, "reliable")
 
-    players[free_id].status = "occupied"
-    players[free_id].peer = peer
+    state.players[free_id].status = "occupied"
+    state.players[free_id].peer = peer
 end
 
 local function handleInputEvent(msg)
-    players[msg.id].input = msg
+    state.players[msg.id].input = msg
 end
 local function handleIncomingEvents()
     local event = server.host:service(3) -- Consider changing timeout to 0
@@ -108,15 +153,15 @@ local function handleIncomingEvents()
             --unregister player
             print("Disconnected: ", event.peer)
             local id_to_make_free
-            for index, value in ipairs(players) do
+            for index, value in ipairs(state.players) do
                 if tostring(value.peer) == tostring(event.peer) then
                     id_to_make_free = index
                     break
                 end
             end
-            players[id_to_make_free].status = "free"
-            players[id_to_make_free].input = {}
-            players[id_to_make_free].peer = nil
+            state.players[id_to_make_free].status = "free"
+            state.players[id_to_make_free].input = {}
+            state.players[id_to_make_free].peer = nil
         end
         event = server.host:check_events()
         count = count + 1
@@ -134,7 +179,7 @@ local function sendUpdatedSnapshot(snapshot)
 
 
 
-    for index, player in ipairs(players) do
+    for index, player in ipairs(state.players) do
         if player.status == "occupied" and player.peer then
             player.peer:send(
                 buf.encode({ type = protocol.stc.update, snapshot = snapshot }),
@@ -153,43 +198,58 @@ function lovr.update(dt)
     -- Run a physical simulation step
     -- Update all objects
 
-    for index, player in ipairs(players) do
+    for index, player in ipairs(state.players) do
         if player.status == "occupied" and player.peer and player.input then
-            if player.input.lmb_pressed then
-                local x, y, z = state.ground:getPosition()
-                state.ground:setPosition(x, y + 0.1, z)
-            end
-            if player.input.rmb_pressed then
-                local x, y, z = state.ground:getPosition()
-                state.ground:setPosition(x, y - 0.1, z)
-            end
+            -- if player.input.lmb_pressed then
+            --     local x, y, z = state.ground:getPosition()
+            --     state.ground:setPosition(x, y + 0.1, z)
+            -- end
+            -- if player.input.rmb_pressed then
+            --     local x, y, z = state.ground:getPosition()
+            --     state.ground:setPosition(x, y - 0.1, z)
+            -- end
         end
     end
 
     -- Decide if any client needs a world update and take a snapshot of the current world state
     -- if necessary
     local x, y, z = state.ground:getPosition()
-    local snapshot = {
-        ground = {
-            x = x, y = y, z = z
-        }
-    }
+    local snapshot = { ground = { x = x, y = y, z = z }, balls = {} }
+    local balls = {}
+    for id, ball in ipairs(state.balls) do
+        local x, y, z, angle, ax, ay, az = ball.collider:getPose()
+        balls[id] = { x = x, y = y, z = z, angle = angle, ax = ax, ay = ay, az = az }
+    end
+    snapshot.balls = balls
     sendUpdatedSnapshot(snapshot)
 end
 
-function lovr.draw(pass)
+local function drawGround(pass, ground)
+    local shape = ground:getShapes()[1]
+    pass:setColor(96 / 255, 129 / 255, 28 / 255)
+    local x, y, z, angle, ax, ay, az = ground:getPose()
+    local sx, sy, sz = shape:getDimensions()
+    pass:box(x, y, z, sx, sy, sz, angle, ax, ay, az)
+end
+
+local function cleanup(pass, lambda)
+    lambda(pass)
+    pass:setColor(1, 1, 1)
+end
+
+local function drawPlane(pass)
     pass:setColor(0x121212)
-    pass:plane(0, 0.01, 0, 90, 120, -math.pi / 2, 1, 0, 0, 'line', 45, 60)
+    pass:plane(0, 0.01, 0, 90, 120, -math.pi / 2, 1, 0, 0, 'line', 90, 120)
+    -- pass:plane(0, 0.01, 0, 90, 120, -math.pi / 2, 1, 0, 0, 'line', 45, 60)
+end
+
+function lovr.draw(pass)
+    pass:setSampler('nearest')
+    cleanup(pass, drawPlane)
     phywire.draw(pass, state.world)
 
-    for index, collider in ipairs(state.world:getColliders()) do
-        local tag = collider:getTag()
-        if tag == "ground" then
-            local shape = collider:getShapes()[1]
-            pass:setColor(0.1, 0.5, 0.1)
-            local x, y, z, angle, ax, ay, az = collider:getPose()
-            local sx, sy, sz = shape:getDimensions()
-            pass:box(x, y, z, sx, sy, sz, angle, ax, ay, az)
-        end
+    cleanup(pass, function() drawGround(pass, state.ground) end)
+    for id, ball in ipairs(state.balls) do
+        drawBall(pass, ball)
     end
 end

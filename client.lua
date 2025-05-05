@@ -18,6 +18,26 @@ local protocol = require 'protocol'
 local buf = require 'string.buffer'
 table.clear = require 'table.clear'
 
+
+
+-- Data to get from server
+local state = {
+    world = nil,
+    ground = nil, -- part of world
+    players = {}, -- part of world
+    balls = {},   -- part of world
+    host = nil,
+}
+local my_player = {}
+
+
+local cameras = {
+    topdown = nil,
+    topdown_look_around = nil,
+    behind_the_back = nil,
+    foreign = nil
+}
+
 local controls = {
     jump = "d",
     header = "s",
@@ -78,12 +98,6 @@ local input = {
 }
 input.window_height, input.window_height = lovr.system.getWindowDimensions()
 
-function lovr.mousemoved(x, y, dx, dy)
-    input.mouse_x = x
-    input.mouse_y = y
-    input.mouse_dx = dx
-    input.mouse_dy = dy
-end
 
 -- Local data
 local lock_mouse = false
@@ -98,18 +112,30 @@ local server = {
     peer = nil,
 }
 
--- Data to get from server
-local state = {
-    cam = nil,
-    turn_cam = nil,
-    world = nil,
-    ground = nil,
-    host = nil,
-}
+local function createBall(world, x, y, z)
+    x = x or 0
+    y = y or 0
+    z = z or 0
 
-----------
--- Load --
-----------
+    local newball = {}
+    newball.model = lovr.graphics.newModel("res/ball/football_ball.gltf")
+    newball.collider = world:newSphereCollider(x, y, z, 0.25)
+    newball.collider:setRestitution(0.7)
+    newball.collider:setFriction(0.7)
+    newball.collider:setLinearDamping(0.3)
+    newball.collider:setAngularDamping(0.7)
+    newball.collider:setMass(0.44)
+    newball.collider:setContinuous(true)
+    newball.collider:setTag("ball")
+    newball.area = world:newCylinderCollider(x, y, z, 0.25 * 3, 0.04)
+    newball.area:setKinematic(true)
+    newball.area:setOrientation(math.pi / 2, 2, 0, 0)
+    newball.area:setTag("ball-area")
+    newball.area:getShape():setUserData(newball)
+
+    return newball
+end
+
 function lovr.load()
     UI2D.Init("lovr")
     lovr.graphics.setBackgroundColor(0x87ceeb)
@@ -127,9 +153,22 @@ function lovr.load()
     state.ground:setKinematic(true)
     state.ground:setTag("ground")
 
+    -- Create balls
+    for i = 1, 22, 1 do
+        state.balls[i] = createBall(state.world, i, 2, 0)
+    end
+
+    print("LOCLA BALLS", #state.balls)
+
 
     state.host = enet.host_create(nil, 1, server.channel_count)
     server.peer = state.host:connect(server.address, server.channel_count)
+end
+
+local function drawBall(pass, ball)
+    local x, y, z, angle, ax, ay, az = ball.collider:getPose()
+    local scale = 1
+    pass:draw(ball.model, x, y, z, scale, angle, ax, ay, az)
 end
 
 ------------
@@ -170,6 +209,12 @@ function lovr.update(dt)
     for index, data in ipairs(messages) do
         if data.type == protocol.stc.update then
             state.ground:setPosition(data.snapshot.ground.x, data.snapshot.ground.y, data.snapshot.ground.z)
+            for i = 1, 22, 1 do
+                local ball = data.snapshot.balls[i]
+                if ball == nil then goto continue end
+                state.balls[i].collider:setPose(ball.x, ball.y, ball.z, ball.angle, ball.ax, ball.ay, ball.az)
+                ::continue::
+            end
         elseif data.type == protocol.stc.id then
             print("Got id", data.id)
             input.id = data.id
@@ -198,6 +243,20 @@ local function lockMouse()
         end
     end
 end
+
+local function cleanup(pass, lambda)
+    lambda(pass)
+    pass:setColor(1, 1, 1)
+end
+
+local function drawGround(pass, ground)
+    local shape = ground:getShapes()[1]
+    pass:setColor(96 / 255, 129 / 255, 28 / 255)
+    local x, y, z, angle, ax, ay, az = ground:getPose()
+    local sx, sy, sz = shape:getDimensions()
+    pass:box(x, y, z, sx, sy, sz, angle, ax, ay, az)
+end
+
 function lovr.draw(pass)
     lockMouse()
     -- GUI CODE
@@ -209,15 +268,10 @@ function lovr.draw(pass)
     pass:plane(0, 0.01, 0, 90, 120, -math.pi / 2, 1, 0, 0, 'line', 45, 60)
     phywire.draw(pass, state.world)
 
-    for index, collider in ipairs(state.world:getColliders()) do
-        local tag = collider:getTag()
-        if tag == "ground" then
-            local shape = collider:getShapes()[1]
-            pass:setColor(0.1, 0.5, 0.1)
-            local x, y, z, angle, ax, ay, az = collider:getPose()
-            local sx, sy, sz = shape:getDimensions()
-            pass:box(x, y, z, sx, sy, sz, angle, ax, ay, az)
-        end
+    cleanup(pass, function() drawGround(pass, state.ground) end)
+
+    for id, ball in ipairs(state.balls) do
+        drawBall(pass, ball)
     end
 
     -- -- GUI CODE
@@ -249,13 +303,10 @@ function lovr.wheelmoved(dx, dy)
     end
 end
 
-local f11presses = 0
 function lovr.keyreleased(key, scancode, repeating)
     UI2D.KeyReleased()
     if key == "f11" then
-        f11presses = f11presses + 1
         local fullscreen, fullscreentype = lovr.window.getFullscreen()
-        print(f11presses, " fullscreen:", fullscreen, "fullscreentype:", fullscreentype)
         lovr.window.setFullscreen(not fullscreen, "exclusive")
     end
     if key == "f10" then
@@ -363,6 +414,13 @@ end
 
 function lovr.textinput(text, code)
     UI2D.TextInput(text)
+end
+
+function lovr.mousemoved(x, y, dx, dy)
+    input.mouse_x = x
+    input.mouse_y = y
+    input.mouse_dx = dx
+    input.mouse_dy = dy
 end
 
 function lovr.mousepressed(x, y, button)

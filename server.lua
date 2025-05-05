@@ -12,6 +12,10 @@ phywire.options.wireframe = true
 
 local pl = require 'player'
 
+local constants = {
+    K = 0.1
+}
+
 local server = {
     address = 'localhost:6750',
     max_peers = 32,
@@ -117,7 +121,7 @@ function lovr.load()
 
     -- Create balls
     for i = 1, 22, 1 do
-        state.balls[i] = createBall(state.world, i, 2 + math.random(1, 4), 0)
+        state.balls[i] = createBall(state.world, i, 23 + math.random(1, 4), 0)
     end
 end
 
@@ -190,6 +194,43 @@ local function sendUpdatedSnapshot(snapshot)
     end
 end
 
+local function calculateMagnusForce(ball_collider, K)
+    -- Get the ball's spin (ω)
+    local angular_vx, angular_vy, angular_vz = ball_collider:getAngularVelocity()
+    -- Get the ball's velocity (v)
+    local linear_vx, linear_vy, linear_vz = ball_collider:getLinearVelocity()
+    -- Calculate the cross product ω × v
+    local magnusX = angular_vy * linear_vz - angular_vz * linear_vy
+    local magnusY = angular_vz * linear_vx - angular_vx * linear_vz
+    local magnusZ = angular_vx * linear_vy - angular_vy * linear_vx
+    -- Scale the Magnus force by the constant K
+    return magnusX * K, magnusY * K, magnusZ * K
+end
+
+local function updateBallPhysics(balls)
+    for id, ball in ipairs(balls) do
+        -- Apply the Magnus force
+        local magnusX, magnusY, magnusZ = calculateMagnusForce(ball.collider, constants.K)
+        ball.collider:applyForce(magnusX, magnusY, magnusZ)
+
+        -- TODO: Apply players forces
+
+        -- Sync ball area position with ball collider position
+        ball.area:setPosition(ball.collider:getPosition())
+    end
+end
+
+local function updatePhysics(dt)
+    state.accumulator = state.accumulator + dt
+
+    while state.accumulator >= state.CONST_DT do
+        state.world:update(state.CONST_DT)
+        state.accumulator = state.accumulator - state.CONST_DT
+
+        updateBallPhysics(state.balls)
+    end
+end
+
 function lovr.update(dt)
     server.frame = server.frame + 1
 
@@ -197,6 +238,8 @@ function lovr.update(dt)
 
     -- Run a physical simulation step
     -- Update all objects
+
+    updatePhysics(dt)
 
     for index, player in ipairs(state.players) do
         if player.status == "occupied" and player.peer and player.input then

@@ -167,6 +167,7 @@ end
 
 local function drawBall(pass, ball)
     local x, y, z, angle, ax, ay, az = ball.collider:getPose()
+    ball.area:setPosition(x, y, z)
     local scale = 1
     pass:draw(ball.model, x, y, z, scale, angle, ax, ay, az)
 end
@@ -191,7 +192,10 @@ function lovr.update(dt)
                 table.insert(messages, buf.decode(event.data))
             elseif event.type == "disconnect" then
                 if event.peer == server.peer then -- This should always be true due to the next statement about inbound connections
-                    table.insert(messages, "Disconnected: " .. event.data)
+                    -- table.insert(messages, event.data)
+                    state.host = enet.host_create(nil, 1, server.channel_count)
+                    server.peer = state.host:connect(server.address, server.channel_count)
+                    print("reconnecting...")
                 end
             elseif event.type == "connect" then
                 print("connected")

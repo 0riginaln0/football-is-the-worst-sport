@@ -137,6 +137,7 @@ end
 local function handleInputEvent(msg)
     state.players[msg.id].input = msg
 end
+
 local function handleIncomingEvents()
     local event = server.host:service(3) -- Consider changing timeout to 0
     local count, limit = 0, 50           -- Handle maximum of 50 events per frame

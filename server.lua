@@ -1,16 +1,17 @@
-local enet = require 'enet'
-local buf = require 'string.buffer'
-local protocol = require 'protocol'
-local dbg = require 'lib.debugger'
-local phywire = require 'lib.phywire'
+local enet = require "enet"
+local buf = require "string.buffer"
+local protocol = require "protocol"
+local dbg = require "lib.debugger"
+local phywire = require "lib.phywire"
 phywire.options.show_shapes = false    -- draw collider shapes (on by default)
 phywire.options.show_velocities = true -- vector showing direction and magnitude of collider linear velocity
 phywire.options.show_angulars = true   -- gizmo displaying the collider's angular velocity
 phywire.options.show_joints = true     -- show joints between colliders
 phywire.options.show_contacts = true   -- show collision contacts (quite inefficient, triples the needed collision computations)
 phywire.options.wireframe = true
+local b = require "ball"
 
-local pl = require 'player'
+local pl = require "player"
 
 local constants = {
     K = 0.1
@@ -36,36 +37,6 @@ local ballexample = {
     collider = nil,
     area = nil,
 }
-
-local function createBall(world, x, y, z)
-    x = x or 0
-    y = y or 0
-    z = z or 0
-
-    local newball = {}
-    newball.model = lovr.graphics.newModel("res/ball/football_ball.gltf")
-    newball.collider = world:newSphereCollider(x, y, z, 0.25)
-    newball.collider:setRestitution(0.7)
-    newball.collider:setFriction(0.7)
-    newball.collider:setLinearDamping(0.3)
-    newball.collider:setAngularDamping(0.7)
-    newball.collider:setMass(0.44)
-    newball.collider:setContinuous(true)
-    newball.collider:setTag("ball")
-    newball.area = world:newCylinderCollider(x, y, z, 0.25 * 3, 0.04)
-    newball.area:setKinematic(true)
-    newball.area:setOrientation(math.pi / 2, 2, 0, 0)
-    newball.area:setTag("ball-area")
-    newball.area:getShape():setUserData(newball)
-
-    return newball
-end
-
-local function drawBall(pass, ball)
-    local x, y, z, angle, ax, ay, az = ball.collider:getPose()
-    local scale = 1
-    pass:draw(ball.model, x, y, z, scale, angle, ax, ay, az)
-end
 
 local state = {
     world = nil,
@@ -121,7 +92,7 @@ function lovr.load()
 
     -- Create balls
     for i = 1, 22, 1 do
-        state.balls[i] = createBall(state.world, i, 23 + math.random(1, 4), 0)
+        state.balls[i] = b.createBall(state.world, i, 23 + math.random(1, 4), 0)
     end
 end
 
@@ -283,17 +254,17 @@ end
 
 local function drawPlane(pass)
     pass:setColor(0x121212)
-    pass:plane(0, 0.01, 0, 90, 120, -math.pi / 2, 1, 0, 0, 'line', 90, 120)
-    -- pass:plane(0, 0.01, 0, 90, 120, -math.pi / 2, 1, 0, 0, 'line', 45, 60)
+    pass:plane(0, 0.01, 0, 90, 120, -math.pi / 2, 1, 0, 0, "line", 90, 120)
+    -- pass:plane(0, 0.01, 0, 90, 120, -math.pi / 2, 1, 0, 0, "line", 45, 60)
 end
 
 function lovr.draw(pass)
-    pass:setSampler('nearest')
+    pass:setSampler("nearest")
     cleanup(pass, drawPlane)
     phywire.draw(pass, state.world)
 
     cleanup(pass, function() drawGround(pass, state.ground) end)
     for id, ball in ipairs(state.balls) do
-        drawBall(pass, ball)
+        b.drawBall(pass, ball)
     end
 end

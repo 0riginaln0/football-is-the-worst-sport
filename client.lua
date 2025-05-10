@@ -17,6 +17,7 @@ local enet = require "enet"
 local protocol = require 'protocol'
 local buf = require 'string.buffer'
 table.clear = require 'table.clear'
+local b = require "ball"
 
 
 
@@ -112,30 +113,6 @@ local server = {
     peer = nil,
 }
 
-local function createBall(world, x, y, z)
-    x = x or 0
-    y = y or 0
-    z = z or 0
-
-    local newball = {}
-    newball.model = lovr.graphics.newModel("res/ball/football_ball.gltf")
-    newball.collider = world:newSphereCollider(x, y, z, 0.25)
-    newball.collider:setRestitution(0.7)
-    newball.collider:setFriction(0.7)
-    newball.collider:setLinearDamping(0.3)
-    newball.collider:setAngularDamping(0.7)
-    newball.collider:setMass(0.44)
-    newball.collider:setContinuous(true)
-    newball.collider:setTag("ball")
-    newball.area = world:newCylinderCollider(x, y, z, 0.25 * 3, 0.04)
-    newball.area:setKinematic(true)
-    newball.area:setOrientation(math.pi / 2, 2, 0, 0)
-    newball.area:setTag("ball-area")
-    newball.area:getShape():setUserData(newball)
-
-    return newball
-end
-
 function lovr.load()
     UI2D.Init("lovr")
     lovr.graphics.setBackgroundColor(0x87ceeb)
@@ -155,7 +132,7 @@ function lovr.load()
 
     -- Create balls
     for i = 1, 22, 1 do
-        state.balls[i] = createBall(state.world, i, 2, 0)
+        state.balls[i] = b.createBall(state.world, i, 2, 0)
     end
 
     print("LOCLA BALLS", #state.balls)
@@ -163,13 +140,6 @@ function lovr.load()
 
     state.host = enet.host_create(nil, 1, server.channel_count)
     server.peer = state.host:connect(server.address, server.channel_count)
-end
-
-local function drawBall(pass, ball)
-    local x, y, z, angle, ax, ay, az = ball.collider:getPose()
-    ball.area:setPosition(x, y, z)
-    local scale = 1
-    pass:draw(ball.model, x, y, z, scale, angle, ax, ay, az)
 end
 
 ------------
@@ -193,9 +163,9 @@ function lovr.update(dt)
             elseif event.type == "disconnect" then
                 if event.peer == server.peer then -- This should always be true due to the next statement about inbound connections
                     -- table.insert(messages, event.data)
-                    state.host = enet.host_create(nil, 1, server.channel_count)
-                    server.peer = state.host:connect(server.address, server.channel_count)
-                    print("reconnecting...")
+                    -- state.host = enet.host_create(nil, 1, server.channel_count)
+                    -- server.peer = state.host:connect(server.address, server.channel_count)
+                    -- print("reconnecting...")
                 end
             elseif event.type == "connect" then
                 print("connected")
@@ -262,6 +232,7 @@ local function drawGround(pass, ground)
 end
 
 function lovr.draw(pass)
+    pass:setSampler("nearest")
     lockMouse()
     -- GUI CODE
     -- pass:setProjection(1, mat4():orthographic(pass:getDimensions()))
@@ -275,7 +246,7 @@ function lovr.draw(pass)
     cleanup(pass, function() drawGround(pass, state.ground) end)
 
     for id, ball in ipairs(state.balls) do
-        drawBall(pass, ball)
+        b.drawBall(pass, ball)
     end
 
     -- -- GUI CODE

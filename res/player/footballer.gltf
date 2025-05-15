@@ -1,0 +1,170 @@
+{
+    "asset": {
+        "version": "2.0",
+        "generator": "Open Asset Import Library (assimp v5.4.0)"
+    },
+    "extensionsUsed": [
+        "KHR_materials_specular",
+        "KHR_materials_volume",
+        "FB_ngon_encoding"
+    ],
+    "accessors": [
+        {
+            "bufferView": 0,
+            "byteOffset": 0,
+            "componentType": 5126,
+            "count": 80206,
+            "type": "VEC3",
+            "max": [
+                0.38242825865745544,
+                0.5004547238349915,
+                0.10179582238197327
+            ],
+            "min": [
+                -0.3796682059764862,
+                -0.49954530596733093,
+                -0.09671278297901154
+            ]
+        },
+        {
+            "bufferView": 1,
+            "byteOffset": 0,
+            "componentType": 5126,
+            "count": 80206,
+            "type": "VEC3",
+            "max": [
+                0.9999997615814209,
+                0.9999988675117493,
+                1.0
+            ],
+            "min": [
+                -0.9999996423721313,
+                -0.9999996423721313,
+                -1.0
+            ]
+        },
+        {
+            "bufferView": 2,
+            "byteOffset": 0,
+            "componentType": 5125,
+            "count": 300000,
+            "type": "SCALAR",
+            "max": [
+                80205
+            ],
+            "min": [
+                0
+            ]
+        }
+    ],
+    "buffers": [
+        {
+            "byteLength": 3124944,
+            "uri": "ASSET_1746862588_3141885.bin"
+        }
+    ],
+    "bufferViews": [
+        {
+            "buffer": 0,
+            "byteOffset": 0,
+            "byteLength": 962472,
+            "target": 34962
+        },
+        {
+            "buffer": 0,
+            "byteOffset": 962472,
+            "byteLength": 962472,
+            "target": 34962
+        },
+        {
+            "buffer": 0,
+            "byteOffset": 1924944,
+            "byteLength": 1200000,
+            "target": 34963
+        }
+    ],
+    "materials": [
+        {
+            "name": "mat0",
+            "pbrMetallicRoughness": {
+                "baseColorFactor": [
+                    0.800000011920929,
+                    0.800000011920929,
+                    0.800000011920929,
+                    1.0
+                ],
+                "metallicFactor": 0.0
+            },
+            "extensions": {
+                "KHR_materials_specular": {
+                    "specularFactor": 1.0,
+                    "specularColorFactor": [
+                        0.800000011920929,
+                        0.800000011920929,
+                        0.800000011920929
+                    ]
+                }
+            }
+        }
+    ],
+    "meshes": [
+        {
+            "name": "mesh",
+            "primitives": [
+                {
+                    "mode": 4,
+                    "material": 0,
+                    "indices": 2,
+                    "attributes": {
+                        "POSITION": 0,
+                        "NORMAL": 1
+                    }
+                }
+            ]
+        }
+    ],
+    "nodes": [
+        {
+            "name": "RootNode",
+            "children": [
+                1
+            ]
+        },
+        {
+            "name": "mesh",
+            "matrix": [
+                100.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                100.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                100.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "mesh": 0,
+            "extras": {
+                "UserProperties": "",
+                "IsNull": false,
+                "DefaultAttributeIndex": 0,
+                "InheritType": 1
+            }
+        }
+    ],
+    "scenes": [
+        {
+            "nodes": [
+                0
+            ]
+        }
+    ],
+    "scene": 0
+}

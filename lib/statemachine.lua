@@ -79,6 +79,24 @@ local function add_to_map(map, event)
     end
 end
 
+---@class StateMachineOptions
+---@field initial? string Initial state (default: 'none')
+---@field events EventDefinition[] List of event definitions
+---@field callbacks? table<string, function> Additional callbacks
+
+---@class EventDefinition
+---@field name string Name of the event (becomes a method)
+---@field from string|string[] Valid source state(s)
+---@field to string Target state
+
+---@class StateMachine
+---@field options StateMachineOptions Configuration options
+---@field events table<string, {map: table}> Event mappings
+---@field is fun(self: StateMachine, state: string): boolean Check current state
+---@field can fun(self: StateMachine, event: string): boolean, string? Check if event can be triggered
+---@field cannot fun(self: StateMachine, event: string): boolean Inverse of can()
+
+---@param options StateMachineOptions
 function machine.create(options)
     assert(options.events)
 

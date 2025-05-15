@@ -2,7 +2,6 @@ local m = {}
 
 ---@class ServerUpdateMessage
 ---@field players table Must be iterated with for i = 1, 30, 1, because it could have nils inside
----@
 
 ---@enum ClientToServerMessage
 m.cts = {

@@ -11,7 +11,7 @@ phywire.options.show_contacts = true   -- show collision contacts (quite ineffic
 phywire.options.wireframe = true
 local b = require "ball"
 
-local pl = require "player"
+local p = require "player"
 
 local constants = {
     K = 0.1
@@ -26,10 +26,10 @@ local server = {
 }
 
 local playerexample = {
-    status = "",        -- occupied free
-    position = "field", -- "field", "gk"
+    status = "", -- occupied free
     input = {},
-    peer = nil
+    peer = nil,
+    player = nil
 }
 
 local ballexample = {
@@ -43,7 +43,7 @@ local state = {
     CONST_DT = 0.015, -- my constant dt, aka "the timestep"
     accumulator = 0,  -- accumulator of time to simulate
     ground = nil,
-    players = {
+    players_slots = {
         -- 30 entries
         { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" },
         { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" },
@@ -86,8 +86,8 @@ function lovr.load()
     state.ground:setTag("ground")
 
     -- Create players
-    for index, slot in ipairs(state.players) do
-        slot.player = pl.new()
+    for index, slot in ipairs(state.players_slots) do
+        slot.player = p.createPlayer(state.world, 40, 0, -30 + index * 2)
     end
 
     -- Create balls
@@ -97,16 +97,16 @@ function lovr.load()
 end
 
 local function handleAuthEvent(peer)
-    local free_id = getFreeId(state.players)
+    local free_id = getFreeId(state.players_slots)
 
     peer:send(buf.encode({ type = protocol.stc.id, id = free_id }), protocol.channel.reliable, "reliable")
 
-    state.players[free_id].status = "occupied"
-    state.players[free_id].peer = peer
+    state.players_slots[free_id].status = "occupied"
+    state.players_slots[free_id].peer = peer
 end
 
 local function handleInputEvent(msg)
-    state.players[msg.id].input = msg
+    state.players_slots[msg.id].input = msg
 end
 
 local function handleIncomingEvents()
@@ -129,15 +129,15 @@ local function handleIncomingEvents()
             --unregister player
             print("Disconnected: ", event.peer)
             local id_to_make_free
-            for index, value in ipairs(state.players) do
+            for index, value in ipairs(state.players_slots) do
                 if tostring(value.peer) == tostring(event.peer) then
                     id_to_make_free = index
                     break
                 end
             end
-            state.players[id_to_make_free].status = "free"
-            state.players[id_to_make_free].input = {}
-            state.players[id_to_make_free].peer = nil
+            state.players_slots[id_to_make_free].status = "free"
+            state.players_slots[id_to_make_free].input = {}
+            state.players_slots[id_to_make_free].peer = nil
         end
         event = server.host:check_events()
         count = count + 1
@@ -145,17 +145,7 @@ local function handleIncomingEvents()
 end
 
 local function sendUpdatedSnapshot(snapshot)
-    -- -- Consider iterating over array of players
-    -- for i = 1, server.max_peers do
-    --     local peer = server.host:get_peer(i)
-    --     if peer:state() == 'connected' then
-    --         --peer:send("New frame: " .. tostring(server.frame))
-    --     end
-    -- end
-
-
-
-    for index, player in ipairs(state.players) do
+    for index, player in ipairs(state.players_slots) do
         if player.status == "occupied" and player.peer then
             player.peer:send(
                 buf.encode({ type = protocol.stc.update, snapshot = snapshot }),
@@ -166,23 +156,12 @@ local function sendUpdatedSnapshot(snapshot)
     end
 end
 
-local function calculateMagnusForce(ball_collider, K)
-    -- Get the ball's spin (ω)
-    local angular_vx, angular_vy, angular_vz = ball_collider:getAngularVelocity()
-    -- Get the ball's velocity (v)
-    local linear_vx, linear_vy, linear_vz = ball_collider:getLinearVelocity()
-    -- Calculate the cross product ω × v
-    local magnusX = angular_vy * linear_vz - angular_vz * linear_vy
-    local magnusY = angular_vz * linear_vx - angular_vx * linear_vz
-    local magnusZ = angular_vx * linear_vy - angular_vy * linear_vx
-    -- Scale the Magnus force by the constant K
-    return magnusX * K, magnusY * K, magnusZ * K
-end
+
 
 local function updateBallPhysics(balls)
     for id, ball in ipairs(balls) do
         -- Apply the Magnus force
-        local magnusX, magnusY, magnusZ = calculateMagnusForce(ball.collider, constants.K)
+        local magnusX, magnusY, magnusZ = b.calculateMagnusForce(ball.collider, constants.K)
         ball.collider:applyForce(magnusX, magnusY, magnusZ)
 
         -- TODO: Apply players forces
@@ -213,7 +192,7 @@ function lovr.update(dt)
 
     updatePhysics(dt)
 
-    for index, player in ipairs(state.players) do
+    for index, player in ipairs(state.players_slots) do
         if player.status == "occupied" and player.peer and player.input then
             -- if player.input.lmb_pressed then
             --     local x, y, z = state.ground:getPosition()
@@ -266,5 +245,9 @@ function lovr.draw(pass)
     cleanup(pass, function() drawGround(pass, state.ground) end)
     for id, ball in ipairs(state.balls) do
         b.drawBall(pass, ball)
+    end
+
+    for id, player_slot in ipairs(state.players_slots) do
+        p.drawPlayer(pass, player_slot.player)
     end
 end

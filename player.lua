@@ -17,6 +17,9 @@ function pl.createPlayer(world, x, y, z)
     local newplayer = {}
     newplayer.state_time = 0.0
 
+    newplayer.cursor_trace = nil
+    newplayer.cursor_pos = nil
+
     newplayer.stamina = 100
     newplayer.pass_fsm = machine.create {
         initial = 'not_passing',

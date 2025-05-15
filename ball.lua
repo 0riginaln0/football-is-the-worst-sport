@@ -42,7 +42,9 @@ function b.createBall(world, x, y, z)
     newball.area:setTag("ball-area")
     newball.area:getShape():setUserData(newball)
 
-    newball.kicked_by = nil
+    newball.kicked_by = nil      -- checks to apply torque
+    newball.state_time = 0
+    newball.last_time_kicked = 0 -- checks to apply torque
 
     return newball
 end

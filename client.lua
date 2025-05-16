@@ -169,8 +169,13 @@ local function lockMouse()
     end
 end
 
+local pass_w = 0
+local pass_h = 0
 function lovr.update(dt)
-    lockMouse()
+    local spot = cursor.cursorToWorldPoint(pass_w, pass_h, cameras.topdown, input.mouse_x, input.mouse_y)
+    input.spot.x, input.spot.y, input.spot.z = spot.x, spot.y, spot.z
+
+
     UI2D.InputInfo()
 
     local msg = buf.encode(input)
@@ -258,6 +263,10 @@ local axis = 1
 
 
 function lovr.draw(pass)
+    local w, h = pass:getDimensions()
+    pass_w = w
+    pass_h = h
+    lockMouse()
     --#region GUI
     pass:setProjection(1, mat4():orthographic(pass:getDimensions()))
     UI2D.Begin("Settings", 0, 0)
@@ -286,10 +295,7 @@ function lovr.draw(pass)
 
 
     cameras.topdown:setCamera(pass)
-    cameras.topdown:nudge()
 
-    local spot = cursor.cursorToWorldPoint(pass, cameras.topdown, input.mouse_x, input.mouse_y)
-    input.spot.x, input.spot.y, input.spot.z = spot.x, spot.y, spot.z
     pass:setSampler("nearest")
 
     pass:setColor(0x121212)

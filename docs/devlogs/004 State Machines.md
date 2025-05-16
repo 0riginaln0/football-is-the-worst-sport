@@ -5,7 +5,7 @@ TODO:
 - [x] Get the spot
 - [x] Send the spot
 - [x] Move to the spot
-- [ ] Send updated player position
+- [x] Send updated player position
 - [ ] Stamina/Slowmowing/Regular/Boost
 - [ ] Jump
 - [ ] Slide

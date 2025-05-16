@@ -4,7 +4,7 @@
 lovr.window = require 'lib.lovr-window'
 lovr.mouse = require 'lib.lovr-mouse'
 local math = require 'math'
-local dbg = require 'lib.debugger'
+local inspect = require("lib.inspect").inspect
 local phywire = require 'lib.phywire'
 phywire.options.show_shapes = true     -- draw collider shapes (on by default)
 phywire.options.show_velocities = true -- vector showing direction and magnitude of collider linear velocity
@@ -20,6 +20,7 @@ table.clear = require 'table.clear'
 local b = require "ball"
 local p = require "player"
 local newCam = require "lib.cam"
+local cursor = require "cursor"
 
 
 
@@ -77,6 +78,8 @@ local input = {
     last_received_frame = nil,
     id = nil,
 
+    spot = { x = 0, y = 0, z = 0 },
+
     window_width = 0,
     window_height = 0,
 
@@ -108,7 +111,6 @@ local input = {
     decrease_fov_button_pressed = false,
 }
 input.window_height, input.window_height = lovr.system.getWindowDimensions()
-
 
 -- Local data
 local lock_mouse = false
@@ -172,10 +174,26 @@ local debug_menu = {
     camera_angle = rad_to_degree(cameras.topdown.polar)
 }
 
-------------
--- Update --
-------------
+
+local function lockMouse()
+    if lock_mouse then
+        local pad = 2
+        local x, y = lovr.mouse.getPosition()
+        if x < 0 + pad then
+            lovr.mouse.setX(pad)
+        elseif x > input.window_width - pad then
+            lovr.mouse.setX(input.window_width - pad)
+        end
+        if y < 0 + pad then
+            lovr.mouse.setY(pad)
+        elseif y > input.window_height - pad then
+            lovr.mouse.setY(input.window_height - pad)
+        end
+    end
+end
+
 function lovr.update(dt)
+    lockMouse()
     UI2D.InputInfo()
 
     local msg = buf.encode(input)
@@ -237,22 +255,6 @@ end
 -- Draw --
 ----------
 
-local function lockMouse()
-    if lock_mouse then
-        local pad = 2
-        local x, y = lovr.mouse.getPosition()
-        if x < 0 + pad then
-            lovr.mouse.setX(pad)
-        elseif x > input.window_width - pad then
-            lovr.mouse.setX(input.window_width - pad)
-        end
-        if y < 0 + pad then
-            lovr.mouse.setY(pad)
-        elseif y > input.window_height - pad then
-            lovr.mouse.setY(input.window_height - pad)
-        end
-    end
-end
 
 local function cleanup(pass, lambda)
     lambda(pass)
@@ -272,7 +274,7 @@ local axis = 1
 
 
 function lovr.draw(pass)
-    -- GUI CODE
+    --#region GUI
     pass:setProjection(1, mat4():orthographic(pass:getDimensions()))
     UI2D.Begin("Settings", 0, 0)
     UI2D.Label("Camera")
@@ -294,19 +296,17 @@ function lovr.draw(pass)
         cameras.topdown.polar = degree_to_rad(debug_menu.camera_angle)
         cameras.topdown:nudge()
     end
-
-
-    if UI2D.RadioButton("Y", axis == 2) then axis = 2 end
-    UI2D.SameLine()
-    if UI2D.RadioButton("Z", axis == 3) then axis = 3 end
     UI2D.End(pass)
     local ui_passes = UI2D.RenderFrame(pass)
+    --#endregion GUI
 
 
     cameras.topdown:setCamera(pass)
     cameras.topdown:nudge()
+
+    local spot = cursor.cursorToWorldPoint(pass, cameras.topdown, input.mouse_x, input.mouse_y)
+    input.spot.x, input.spot.y, input.spot.z = spot.x, spot.y, spot.z
     pass:setSampler("nearest")
-    lockMouse()
 
     pass:setColor(0x121212)
     pass:plane(0, 0.01, 0, 90, 120, -math.pi / 2, 1, 0, 0, 'line', 45, 60)

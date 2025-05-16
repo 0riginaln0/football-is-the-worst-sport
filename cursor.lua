@@ -2,8 +2,6 @@ local m = {}
 
 -- next three functions convert mouse coordinate from screen to the 3D position on the ground plane
 
-
--- Тут не нужен pass, тут нужен screen width height
 local function getWorldFromScreen(pass, cam)
     local w, h = pass:getDimensions()
     local clip_from_screen = mat4(-1, -1, 0):scale(2 / w, 2 / h, 1)
@@ -14,13 +12,10 @@ local function getWorldFromScreen(pass, cam)
     return view_pose:mul(view_proj:invert()):mul(clip_from_screen)
 end
 
-
--- а сюда позиция мышки x y
-local function getRay(world_from_screen, distance)
+local function getRay(world_from_screen, distance, x, y)
     local NEAR_PLANE = 0.01
     distance = distance or 1e3
     local ray = {}
-    local x, y = lovr.mouse.getPosition()
     ray.origin = vec3(world_from_screen:mul(x, y, NEAR_PLANE / NEAR_PLANE))
     ray.target = vec3(world_from_screen:mul(x, y, NEAR_PLANE / distance))
     return ray
@@ -45,10 +40,9 @@ local function mouseOnGround(ray)
     return hit_spot
 end
 
--- Тут не нужен pass, тут нужен screen width height
-function m.cursorToWorldPoint(pass, cam)
+function m.cursorToWorldPoint(pass, cam, mouse_x, mouse_y)
     local world_from_screen = getWorldFromScreen(pass, cam)
-    local ray = getRay(world_from_screen)
+    local ray = getRay(world_from_screen, nil, mouse_x, mouse_y)
     local spot = mouseOnGround(ray)
     return spot
 end

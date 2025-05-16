@@ -1,0 +1,15 @@
+TODO:
+- [ ] Instanciate player
+- [ ] Attach camera
+- [ ] Add GUI elements to change parameters in real time
+- [ ] Get the spot
+- [ ] Send the spot
+- [ ] Move to the spot
+- [ ] Stamina/Slowmowing/Regular/Boost
+- [ ] Jump
+- [ ] Slide
+- [ ] Dive
+- [ ] Passing the ball (Make player colliders not collide with the ball after kick for a timeout)
+- [ ] Shooting the ball
+- [ ] Add torque to the ball according to player's spot trace
+- [ ] Add walls

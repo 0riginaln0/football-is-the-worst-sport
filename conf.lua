@@ -17,7 +17,7 @@ end
 ---@diagnostic disable: duplicate-set-field
 function lovr.conf(t)
     if mode == MODE.CLIENT then
-        t.modules.headset = true -- TODO: CHANGE TO FALSE
+        t.modules.headset = false -- TODO: CHANGE TO FALSE
     elseif mode == MODE.SERVER then
         t.modules.headset = true
     end

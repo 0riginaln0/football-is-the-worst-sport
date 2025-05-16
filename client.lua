@@ -18,6 +18,8 @@ local protocol = require 'protocol'
 local buf = require 'string.buffer'
 table.clear = require 'table.clear'
 local b = require "ball"
+local p = require "player"
+local newCam = require "lib.cam"
 
 
 
@@ -25,18 +27,26 @@ local b = require "ball"
 local state = {
     world = nil,
     ground = nil, -- part of world
-    players = {}, -- part of world
-    balls = {},   -- part of world
+    players_slots = {
+        -- 30 entries
+        { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" },
+        { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" },
+        { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" },
+        { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" },
+        { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" },
+        { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" }, { status = "free" },
+    },
+    balls = {}, -- part of world
     host = nil,
 }
 local my_player = {}
 
 
 local cameras = {
-    topdown = nil,
-    topdown_look_around = nil,
-    behind_the_back = nil,
-    foreign = nil
+    topdown = newCam(),
+    topdown_look_around = newCam(),
+    behind_the_back = newCam(),
+    foreign = newCam()
 }
 
 local controls = {
@@ -130,6 +140,11 @@ function lovr.load()
     state.ground:setKinematic(true)
     state.ground:setTag("ground")
 
+    -- Create s_slots
+    for index, slot in ipairs(state.players_slots) do
+        slot.player = p.createPlayer(state.world, 40, 0, -30 + index * 2)
+    end
+
     -- Create balls
     for i = 1, 22, 1 do
         state.balls[i] = b.createBall(state.world, i, 2, 0)
@@ -142,6 +157,21 @@ function lovr.load()
     server.peer = state.host:connect(server.address, server.channel_count)
 end
 
+local function rad_to_degree(rad)
+    return rad * 57.2958
+end
+
+local function degree_to_rad(degree)
+    return degree * 0.0174533
+end
+
+local debug_menu = {
+    camera_fov_degree = rad_to_degree(cameras.topdown.fov),
+    camera_distance = cameras.topdown.radius,
+    camera_vertical_offset = 0,
+    camera_angle = rad_to_degree(cameras.topdown.polar)
+}
+
 ------------
 -- Update --
 ------------
@@ -149,7 +179,7 @@ function lovr.update(dt)
     UI2D.InputInfo()
 
     local msg = buf.encode(input)
-    if server.peer and input.id then
+    if server.peer and input.id then -- TODO: Add state machine isntead of checking for autherization by input.id
         server.peer:send(msg, protocol.channel.unsequenced, "unsequenced")
     end
 
@@ -192,9 +222,15 @@ function lovr.update(dt)
         elseif data.type == protocol.stc.id then
             print("Got id", data.id)
             input.id = data.id
+            print("My player has ID:", input.id)
         end
     end
     table.clear(messages)
+
+    if input.id then
+        local pl_pos = state.players_slots[input.id].player.pos
+        cameras.topdown.center:set(pl_pos.x, pl_pos.y + debug_menu.camera_vertical_offset, pl_pos.z)
+    end
 end
 
 ----------
@@ -231,13 +267,46 @@ local function drawGround(pass, ground)
     pass:box(x, y, z, sx, sy, sz, angle, ax, ay, az)
 end
 
+local axis = 1
+
+
+
 function lovr.draw(pass)
+    -- GUI CODE
+    pass:setProjection(1, mat4():orthographic(pass:getDimensions()))
+    UI2D.Begin("Settings", 0, 0)
+    UI2D.Label("Camera")
+    do
+        debug_menu.camera_fov_degree = UI2D.SliderFloat("fov", debug_menu.camera_fov_degree, 30, 130)
+        cameras.topdown.fov = degree_to_rad(debug_menu.camera_fov_degree)
+        cameras.topdown:resize(lovr.system.getWindowDimensions())
+    end
+    do
+        debug_menu.camera_distance = UI2D.SliderFloat("distance", debug_menu.camera_distance, 3, 40)
+        cameras.topdown.radius = debug_menu.camera_distance
+        cameras.topdown:nudge()
+    end
+    do
+        debug_menu.camera_vertical_offset = UI2D.SliderFloat("vertical offset", debug_menu.camera_vertical_offset, 0, 10)
+    end
+    do
+        debug_menu.camera_angle = UI2D.SliderFloat("angle", debug_menu.camera_angle, 0, 70)
+        cameras.topdown.polar = degree_to_rad(debug_menu.camera_angle)
+        cameras.topdown:nudge()
+    end
+
+
+    if UI2D.RadioButton("Y", axis == 2) then axis = 2 end
+    UI2D.SameLine()
+    if UI2D.RadioButton("Z", axis == 3) then axis = 3 end
+    UI2D.End(pass)
+    local ui_passes = UI2D.RenderFrame(pass)
+
+
+    cameras.topdown:setCamera(pass)
+    cameras.topdown:nudge()
     pass:setSampler("nearest")
     lockMouse()
-    -- GUI CODE
-    -- pass:setProjection(1, mat4():orthographic(pass:getDimensions()))
-    -- local ui_passes = UI2D.RenderFrame(pass)
-    -- GUI CODE
 
     pass:setColor(0x121212)
     pass:plane(0, 0.01, 0, 90, 120, -math.pi / 2, 1, 0, 0, 'line', 45, 60)
@@ -249,9 +318,13 @@ function lovr.draw(pass)
         b.drawBall(pass, ball)
     end
 
-    -- -- GUI CODE
-    -- table.insert(ui_passes, pass)
-    -- return lovr.graphics.submit(ui_passes)
+    for id, player_slot in ipairs(state.players_slots) do
+        p.drawPlayer(pass, player_slot.player)
+    end
+
+
+    table.insert(ui_passes, pass)
+    return lovr.graphics.submit(ui_passes)
 end
 
 function lovr.quit()
@@ -267,6 +340,7 @@ end
 
 function lovr.resize(width, height)
     input.window_width, input.window_height = width, height
+    cameras.topdown:resize(width, height)
 end
 
 function lovr.wheelmoved(dx, dy)
@@ -274,7 +348,7 @@ function lovr.wheelmoved(dx, dy)
     input.wheel_moved_dx, input.wheel_moved_dy = dx, dy
 
     if not UI2D.HasMouse() then
-        -- something
+        cameras.topdown:wheelmoved(dx, dy)
     end
 end
 
@@ -396,6 +470,8 @@ function lovr.mousemoved(x, y, dx, dy)
     input.mouse_y = y
     input.mouse_dx = dx
     input.mouse_dy = dy
+
+    cameras.topdown:mousemoved(x, y, dx, dy)
 end
 
 function lovr.mousepressed(x, y, button)

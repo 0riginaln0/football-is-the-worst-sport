@@ -495,7 +495,7 @@ local function UpdateLayout(bbox)
   layout.same_column = false
 end
 
-local function Slider(type, name, v, v_min, v_max, width, tooltip)
+local function Slider(type, name, v, v_min, v_max, width, num_decimals, tooltip)
   local text = GetLabelPart(name)
   local cur_window = windows[begin_idx]
   local text_w = font.handle:getWidth(text)
@@ -704,20 +704,20 @@ function UI2D.InputInfo()
       if v[1] == 0 then
         v[1] = 1
         v[2] = 1
-        v[3] = 1         -- pressed
+        v[3] = 1 -- pressed
       else
         v[1] = 1
         v[2] = 0
-        v[3] = 2         -- held
+        v[3] = 2 -- held
       end
     else
       if v[1] == 1 then
         v[1] = 0
-        v[3] = 3         -- released
+        v[3] = 3 -- released
       else
         v[1] = 0
         v[1] = 0
-        v[3] = 0         -- idle
+        v[3] = 0 -- idle
       end
     end
   end
@@ -829,7 +829,7 @@ function UI2D.InputInfo()
 end
 
 function UI2D.Begin(name, x, y, is_modal)
-  local exists, idx = WindowExists(name)   -- TODO: Can't currently change window title on runtime
+  local exists, idx = WindowExists(name) -- TODO: Can't currently change window title on runtime
 
   if not exists then
     next_z = next_z + 0.01
@@ -909,7 +909,7 @@ function UI2D.End(main_pass)
 
   local txt = cur_window.title
   local title_w = utf8.len(txt) * font.w
-  if title_w > cur_window.w - (2 * margin) then   -- Truncate title
+  if title_w > cur_window.w - (2 * margin) then -- Truncate title
     local num_chars = ((cur_window.w - (2 * margin)) / font.w) - 3
     txt = string.sub(txt, 1, num_chars) .. "..."
     title_w = utf8.len(txt) * font.w
@@ -1794,7 +1794,7 @@ function UI2D.TextBox(name, num_visible_chars, text, tooltip)
       end
     else
       if mouse.state == e_mouse_state.clicked then
-        if active_widget == cur_window.id .. name then         -- Deactivate self
+        if active_widget == cur_window.id .. name then -- Deactivate self
           has_text_input = false
           active_textbox = nil
           active_widget = nil
@@ -1804,7 +1804,7 @@ function UI2D.TextBox(name, num_visible_chars, text, tooltip)
     end
 
     if active_widget == cur_window.id .. name then
-      if keys["tab"][3] == 1 or keys["return"][3] == 1 or keys["return"][3] == 1 then       -- Deactivate self
+      if keys["tab"][3] == 1 or keys["return"][3] == 1 or keys["return"][3] == 1 then -- Deactivate self
         has_text_input = false
         active_textbox = nil
         active_widget = nil
@@ -1867,7 +1867,7 @@ function UI2D.ListBox(name, num_visible_rows, num_visible_chars, collection, sel
     lst_idx = #listbox_state
   end
 
-  local sbt = font.h   -- scrollbar thickness
+  local sbt = font.h -- scrollbar thickness
   local bbox = {}
   if layout.same_line then
     bbox = {
@@ -1915,7 +1915,7 @@ function UI2D.ListBox(name, num_visible_rows, num_visible_chars, collection, sel
   local r_btn_col = colors.list_button
   if not modal_window or (modal_window and modal_window == cur_window) then
     if cur_window == active_window then
-      if PointInRect(mouse.x, mouse.y, bbox.x + cur_window.x, bbox.y + cur_window.y, bbox.w, bbox.h) then       -- whole listbox
+      if PointInRect(mouse.x, mouse.y, bbox.x + cur_window.x, bbox.y + cur_window.y, bbox.w, bbox.h) then -- whole listbox
         if tooltip then
           active_tooltip.text = tooltip
           active_tooltip.x = mouse.x
@@ -1925,7 +1925,7 @@ function UI2D.ListBox(name, num_visible_rows, num_visible_chars, collection, sel
         listbox_state[lst_idx].scroll_x = listbox_state[lst_idx].scroll_x - mouse.wheel_x
       end
 
-      if PointInRect(mouse.x, mouse.y, bbox.x + cur_window.x, bbox.y + cur_window.y, bbox.w - sbt, bbox.h - sbt) and #collection > 0 then       -- content area
+      if PointInRect(mouse.x, mouse.y, bbox.x + cur_window.x, bbox.y + cur_window.y, bbox.w - sbt, bbox.h - sbt) and #collection > 0 then -- content area
         highlight_idx = math.floor((mouse.y - cur_window.y - bbox.y) / (font.h)) + 1
         highlight_idx = Clamp(highlight_idx, 1, #collection)
 
@@ -1954,27 +1954,27 @@ function UI2D.ListBox(name, num_visible_rows, num_visible_chars, collection, sel
             end
           end
         end
-      elseif PointInRect(mouse.x, mouse.y, sb_vertical.x + cur_window.x, sb_vertical.y + cur_window.y, sbt, sb_vertical.h) then             -- v_scrollbar
-      elseif PointInRect(mouse.x, mouse.y, sb_horizontal.x + cur_window.x, sb_horizontal.y + cur_window.y, sb_horizontal.w, sbt) then       -- h_scrollbar
-      elseif PointInRect(mouse.x, mouse.y, sb_button_top.x + cur_window.x, sb_button_top.y + cur_window.y, sb_button_top.w, sbt) then       -- button top
+      elseif PointInRect(mouse.x, mouse.y, sb_vertical.x + cur_window.x, sb_vertical.y + cur_window.y, sbt, sb_vertical.h) then       -- v_scrollbar
+      elseif PointInRect(mouse.x, mouse.y, sb_horizontal.x + cur_window.x, sb_horizontal.y + cur_window.y, sb_horizontal.w, sbt) then -- h_scrollbar
+      elseif PointInRect(mouse.x, mouse.y, sb_button_top.x + cur_window.x, sb_button_top.y + cur_window.y, sb_button_top.w, sbt) then -- button top
         t_btn_col = colors.list_button_hover
         if mouse.state == e_mouse_state.clicked then
           listbox_state[lst_idx].scroll_y = listbox_state[lst_idx].scroll_y - 1
           t_btn_col = colors.list_button_click
         end
-      elseif PointInRect(mouse.x, mouse.y, sb_button_bottom.x + cur_window.x, sb_button_bottom.y + cur_window.y, sb_button_bottom.w, sbt) then       -- button bottom
+      elseif PointInRect(mouse.x, mouse.y, sb_button_bottom.x + cur_window.x, sb_button_bottom.y + cur_window.y, sb_button_bottom.w, sbt) then -- button bottom
         b_btn_col = colors.list_button_hover
         if mouse.state == e_mouse_state.clicked then
           listbox_state[lst_idx].scroll_y = listbox_state[lst_idx].scroll_y + 1
           b_btn_col = colors.list_button_click
         end
-      elseif PointInRect(mouse.x, mouse.y, sb_button_left.x + cur_window.x, sb_button_left.y + cur_window.y, sb_button_left.w, sbt) then       -- button left
+      elseif PointInRect(mouse.x, mouse.y, sb_button_left.x + cur_window.x, sb_button_left.y + cur_window.y, sb_button_left.w, sbt) then -- button left
         l_btn_col = colors.list_button_hover
         if mouse.state == e_mouse_state.clicked then
           listbox_state[lst_idx].scroll_x = listbox_state[lst_idx].scroll_x - 1
           l_btn_col = colors.list_button_click
         end
-      elseif PointInRect(mouse.x, mouse.y, sb_button_right.x + cur_window.x, sb_button_right.y + cur_window.y, sb_button_right.w, sbt) then       -- button right
+      elseif PointInRect(mouse.x, mouse.y, sb_button_right.x + cur_window.x, sb_button_right.y + cur_window.y, sb_button_right.w, sbt) then -- button right
         r_btn_col = colors.list_button_hover
         if mouse.state == e_mouse_state.clicked then
           listbox_state[lst_idx].scroll_x = listbox_state[lst_idx].scroll_x + 1
@@ -2271,7 +2271,7 @@ function UI2D.RenderFrame(main_pass)
       end
       if framework.type == "lovr" then
         framework.SetMaterial(main_pass, win.texture)
-        framework.DrawRect(main_pass, win.x + (win.w / 2), win.y + (win.h / 2), win.w, -win.h, "fill")         --NOTE flip Y fix
+        framework.DrawRect(main_pass, win.x + (win.w / 2), win.y + (win.h / 2), win.w, -win.h, "fill") --NOTE flip Y fix
         framework.SetMaterial(main_pass)
       else
         love.graphics.draw(win.texture, win.x, win.y)
@@ -2288,7 +2288,7 @@ function UI2D.RenderFrame(main_pass)
         framework.SetMaterial(win.pass)
         framework.SetColor(win.pass, { 1, 1, 1 })
       end
-      if i == 1 and active_tooltip.text ~= "" then       -- Draw tooltip
+      if i == 1 and active_tooltip.text ~= "" then -- Draw tooltip
         local num_lines = GetLineCount(active_tooltip.text)
         local text_w = font.handle:getWidth(active_tooltip.text)
         local rect_x = active_tooltip.x + (text_w / 2) + font.h

@@ -96,6 +96,8 @@ function lovr.load()
     end
 end
 
+---handleAuthEvent
+---@param peer ENetPeer
 local function handleAuthEvent(peer)
     local free_id = getFreeId(state.players_slots)
 

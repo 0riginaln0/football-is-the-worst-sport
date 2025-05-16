@@ -1,6 +1,6 @@
 TODO:
-- [ ] Instanciate player
-- [ ] Attach camera
+- [x] Instanciate player
+- [x] Attach camera
 - [ ] Add GUI elements to change parameters in real time
 - [ ] Get the spot
 - [ ] Send the spot

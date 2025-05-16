@@ -1,5 +1,5 @@
 local b = {}
-local machine = require "statemachine"
+local machine = require "lib.statemachine"
 
 
 local constants = {

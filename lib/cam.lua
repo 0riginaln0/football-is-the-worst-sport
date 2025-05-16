@@ -27,63 +27,63 @@ local function newCam()
     m.projection = Mat4():perspective(m.fov, 1, m.near_plane, 0)
 
     -- should be called on top of lovr.draw()
-    function m.setCamera(pass)
-        pass:setViewPose(1, m.pose)
-        pass:setProjection(1, m.projection)
+    function m.setCamera(self, pass)
+        pass:setViewPose(1, self.pose)
+        pass:setProjection(1, self.projection)
     end
 
     -- make relative changes to camera position
-    function m.nudge(delta_azimuth, delta_polar, delta_radius)
-        delta_azimuth = delta_azimuth or 0
-        delta_polar   = delta_polar or 0
-        delta_radius  = delta_radius or 0
-        m.azimuth     = m.azimuth + delta_azimuth
-        m.polar       = math.max(m.polar_upper, math.min(m.polar_lower, m.polar + delta_polar))
-        m.radius      = math.max(m.radius_lower, m.radius + delta_radius)
-        m.position.x  = m.center.x + m.radius * math.sin(m.polar) * math.cos(m.azimuth)
-        m.position.y  = m.center.y + m.radius * math.cos(m.polar)
-        m.position.z  = m.center.z + m.radius * math.sin(m.polar) * math.sin(m.azimuth)
-        m.pose:target(m.position, m.center, m.upvector)
+    function m.nudge(self, delta_azimuth, delta_polar, delta_radius)
+        delta_azimuth   = delta_azimuth or 0
+        delta_polar     = delta_polar or 0
+        delta_radius    = delta_radius or 0
+        self.azimuth    = self.azimuth + delta_azimuth
+        self.polar      = math.max(self.polar_upper, math.min(self.polar_lower, self.polar + delta_polar))
+        self.radius     = math.max(self.radius_lower, self.radius + delta_radius)
+        self.position.x = self.center.x + self.radius * math.sin(self.polar) * math.cos(self.azimuth)
+        self.position.y = self.center.y + self.radius * math.cos(self.polar)
+        self.position.z = self.center.z + self.radius * math.sin(self.polar) * math.sin(self.azimuth)
+        self.pose:target(self.position, self.center, self.upvector)
     end
 
     -- should be called from lovr.resize()
-    function m.resize(width, height)
+    function m.resize(self, width, height)
         local aspect = width / height
-        m.projection = Mat4():perspective(m.fov, aspect, m.near_plane, 0)
+        self.projection = Mat4():perspective(self.fov, aspect, self.near_plane, 0)
     end
 
-    m.resize(lovr.system.getWindowDimensions())
+    m:resize(lovr.system.getWindowDimensions())
 
-    function m.incrementFov(inc)
-        m.fov = m.fov + inc
-        m.resize(lovr.system.getWindowDimensions())
+    function m.incrementFov(self, inc)
+        self.fov = self.fov + inc
+        self:resize(lovr.system.getWindowDimensions())
     end
 
     -- should be called from lovr.mousemoved()
-    function m.mousemoved(x, y, dx, dy)
+    function m.mousemoved(self, x, y, dx, dy)
         if lovr.system.isMouseDown(3) then
             if lovr.system.isMouseDown(1) then
-                m.center.y = m.center.y + m.pan_speed * 0.01 * dy
+                self.center.y = self.center.y + self.pan_speed * 0.01 * dy
             else
-                local view           = mat4(m.pose):invert()
+                local view           = mat4(self.pose):invert()
                 local camera_right   = vec3(view[1], view[5], view[9])
                 local camera_forward = vec3(view[2], 0, view[10]):normalize()
-                m.center:add(camera_right * (m.pan_speed * 0.005 * -dx))
-                m.center:add(camera_forward * (m.pan_speed * 0.005 * dy))
+                self.center:add(camera_right * (self.pan_speed * 0.005 * -dx))
+                self.center:add(camera_forward * (self.pan_speed * 0.005 * dy))
             end
-            m.nudge()
+            self:nudge()
         elseif lovr.system.isMouseDown(1) then
-            m.nudge(m.orbit_speed * 0.0025 * dx, m.orbit_speed * 0.0025 * -dy, 0)
+            self:nudge(self.orbit_speed * 0.0025 * dx, self.orbit_speed * 0.0025 * -dy, 0)
         end
     end
 
     -- should be called from lovr.wheelmoved()
-    function m.wheelmoved(dx, dy)
-        m.nudge(0, 0, -dy * m.zoom_speed * 0.12)
+    function m.wheelmoved(self, dx, dy)
+        self:nudge(0, 0, -dy * self.zoom_speed * 0.12)
     end
 
-    function m.getLookVector()
-        return m.center - m.position
+    function m.getLookVector(self)
+        return self.center - self.position
     end
 
     -- quick way to start using camera module - just call this function

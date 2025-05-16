@@ -3,8 +3,9 @@ TODO:
 - [x] Attach camera
 - [x] Add GUI elements to change parameters in real time
 - [x] Get the spot
-- [ ] Send the spot
-- [ ] Move to the spot
+- [x] Send the spot
+- [x] Move to the spot
+- [ ] Send updated player position
 - [ ] Stamina/Slowmowing/Regular/Boost
 - [ ] Jump
 - [ ] Slide

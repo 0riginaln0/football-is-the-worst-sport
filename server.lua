@@ -10,6 +10,7 @@ phywire.options.show_joints = true     -- show joints between colliders
 phywire.options.show_contacts = true   -- show collision contacts (quite inefficient, triples the needed collision computations)
 phywire.options.wireframe = true
 local b = require "ball"
+table.clear = require 'table.clear'
 
 local p = require "player"
 
@@ -37,6 +38,7 @@ local ballexample = {
     collider = nil,
     area = nil,
 }
+
 
 local state = {
     world = nil,
@@ -160,7 +162,7 @@ end
 
 
 
-local function updateBallPhysics(balls)
+local function updateBallsPhysics(balls)
     for id, ball in ipairs(balls) do
         -- Apply the Magnus force
         local magnusX, magnusY, magnusZ = b.calculateMagnusForce(ball.collider, constants.K)
@@ -173,6 +175,15 @@ local function updateBallPhysics(balls)
     end
 end
 
+local function updatePlayersPhysics(player_slots)
+    for index, slot in ipairs(player_slots) do
+        if slot.input then
+            slot.updated = true
+            slot.player:updatePlayerPhysics(slot.input)
+        end
+    end
+end
+
 local function updatePhysics(dt)
     state.accumulator = state.accumulator + dt
 
@@ -180,10 +191,13 @@ local function updatePhysics(dt)
         state.world:update(state.CONST_DT)
         state.accumulator = state.accumulator - state.CONST_DT
 
-        updateBallPhysics(state.balls)
+        updatePlayersPhysics(state.players_slots)
+        updateBallsPhysics(state.balls)
     end
 end
-
+local snapshot = {}
+local balls = {}
+local slots = {}
 function lovr.update(dt)
     server.frame = server.frame + 1
 
@@ -207,17 +221,28 @@ function lovr.update(dt)
         end
     end
 
-    -- Decide if any client needs a world update and take a snapshot of the current world state
-    -- if necessary
+    -- Gather snapshot info and send it
     local x, y, z = state.ground:getPosition()
-    local snapshot = { ground = { x = x, y = y, z = z }, balls = {} }
-    local balls = {}
     for id, ball in ipairs(state.balls) do
         local x, y, z, angle, ax, ay, az = ball.collider:getPose()
         balls[id] = { x = x, y = y, z = z, angle = angle, ax = ax, ay = ay, az = az }
     end
     snapshot.balls = balls
+    for id, slot in ipairs(state.players_slots) do
+        if slot.updated then
+            slots[id] = {
+                status = slot.status,
+                player = {
+                    pos = { x = slot.player.pos.x, y = slot.player.pos.y, z = slot.player.pos.z }
+                }
+            }
+            slot.updated = false
+        end
+    end
+    snapshot.players_slots = slots
     sendUpdatedSnapshot(snapshot)
+    table.clear(balls)
+    table.clear(slots)
 end
 
 local function drawGround(pass, ground)

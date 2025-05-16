@@ -8,7 +8,12 @@ TODO:
 ]]
 
 
-
+---comment
+---@param world any
+---@param x any
+---@param y any
+---@param z any
+---@return table
 function pl.createPlayer(world, x, y, z)
     x = x or 0
     y = y or 0
@@ -16,9 +21,6 @@ function pl.createPlayer(world, x, y, z)
 
     local newplayer = {}
     newplayer.state_time = 0.0
-
-    newplayer.cursor_trace = nil
-    newplayer.cursor_pos = nil
 
     newplayer.stamina = 100
     newplayer.pass_fsm = machine.create {
@@ -66,6 +68,13 @@ function pl.createPlayer(world, x, y, z)
         x = x, y = y, z = z
     }
     newplayer.model = lovr.graphics.newModel("res/player/footballer.gltf")
+
+    function newplayer.updatePlayerPhysics(player, input)
+        if input.spot then
+            player.pos.x, player.pos.y, player.pos.z = input.spot.x, input.spot.y, input.spot.z
+        end
+    end
+
     return newplayer
 end
 

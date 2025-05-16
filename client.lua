@@ -51,28 +51,27 @@ local cameras = {
 }
 
 local controls = {
-    jump = "d",
-    header = "s",
-    slide = "d",
+    jump = "space",
+    dive = "d",
+    slide = "s",
     focus = "w",
     look_right = "e",
     look_left = "q",
     zoom_in = "y",
     zoom_out = "t",
-    move_camera_up = "h",
-    move_camera_down = "g",
-    move_camera_higher = "n",
-    move_camera_lower = "b",
-    increase_fov = "z",
-    decrease_fov = "c",
 }
 
 ---@class PlayerInput
 ---@field type ClientToServerMessage
 ---@field last_received_frame number|nil
 ---@field id number|nil
----@field window_width number
----@field window_height number
+---@field spot { x: number, y: number, z: number }
+---@field lmb_pressed boolean
+---@field rmb_pressed boolean
+---@field mmb_pressed boolean
+---@field jump_button_pressed boolean
+---@field dive_button_pressed boolean
+---@field slide_button_pressed boolean
 local input = {
     type = protocol.cts.input,
     last_received_frame = nil,
@@ -80,35 +79,13 @@ local input = {
 
     spot = { x = 0, y = 0, z = 0 },
 
-    window_width = 0,
-    window_height = 0,
-
-    mouse_x = 0,
-    mouse_y = 0,
-    mouse_dx = 0,
-    mouse_dy = 0,
-
-    wheel_moved_dx = 0,
-    wheel_moved_dy = 0,
-
     lmb_pressed = false,
     rmb_pressed = false,
     mmb_pressed = false,
 
     jump_button_pressed = false,
-    header_button_pressed = false,
+    dive_button_pressed = false,
     slide_button_pressed = false,
-    focus_button_pressed = false,
-    zoom_in_button_pressed = false,
-    zoom_out_button_pressed = false,
-    look_right_button_pressed = false,
-    look_left_button_pressed = false,
-    move_camera_up_button_pressed = false,
-    move_camera_down_button_pressed = false,
-    move_camera_higher_button_pressed = false,
-    move_camera_lower_button_pressed = false,
-    increase_fov_button_pressed = false,
-    decrease_fov_button_pressed = false,
 }
 input.window_height, input.window_height = lovr.system.getWindowDimensions()
 
@@ -230,11 +207,23 @@ function lovr.update(dt)
     -- Set updated world info
     for index, data in ipairs(messages) do
         if data.type == protocol.stc.update then
-            state.ground:setPosition(data.snapshot.ground.x, data.snapshot.ground.y, data.snapshot.ground.z)
             for i = 1, 22, 1 do
                 local ball = data.snapshot.balls[i]
                 if ball == nil then goto continue end
                 state.balls[i].collider:setPose(ball.x, ball.y, ball.z, ball.angle, ball.ax, ball.ay, ball.az)
+                ::continue::
+            end
+            for i = 1, 30, 1 do
+                local slot = data.snapshot.players_slots[i]
+                if slot == nil then goto continue end
+                state.players_slots[i].status = slot.status
+                local x, y, z = slot.player.pos.x, slot.player.pos.y, slot.player.pos.z
+                state.players_slots[i].player.pos.x = x
+                state.players_slots[i].player.pos.y = y
+                state.players_slots[i].player.pos.z = z
+                if i == input.id then
+                    cameras.topdown.center:set(x, y + debug_menu.camera_vertical_offset, z)
+                end
                 ::continue::
             end
         elseif data.type == protocol.stc.id then
@@ -244,11 +233,6 @@ function lovr.update(dt)
         end
     end
     table.clear(messages)
-
-    if input.id then
-        local pl_pos = state.players_slots[input.id].player.pos
-        cameras.topdown.center:set(pl_pos.x, pl_pos.y + debug_menu.camera_vertical_offset, pl_pos.z)
-    end
 end
 
 ----------
@@ -371,8 +355,8 @@ function lovr.keyreleased(key, scancode, repeating)
     if key == controls.jump then
         input.jump_button_pressed = false
     end
-    if key == controls.header then
-        input.header_button_pressed = false
+    if key == controls.dive then
+        input.dive_button_pressed = false
     end
     if key == controls.slide then
         input.slide_button_pressed = false
@@ -420,8 +404,8 @@ function lovr.keypressed(key, scancode, repeating)
     if key == controls.jump then
         input.jump_button_pressed = true
     end
-    if key == controls.header then
-        input.header_button_pressed = true
+    if key == controls.dive then
+        input.dive_button_pressed = true
     end
     if key == controls.slide then
         input.slide_button_pressed = true

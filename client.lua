@@ -148,9 +148,11 @@ local debug_menu = {
     camera_fov_degree = rad_to_degree(cameras.topdown.fov),
     camera_distance = cameras.topdown.radius,
     camera_vertical_offset = 0,
-    camera_angle = rad_to_degree(cameras.topdown.polar)
+    camera_angle = rad_to_degree(cameras.topdown.polar),
+    font_size = 14
 }
 
+local track_cursor = false
 
 local function lockMouse()
     if lock_mouse then
@@ -172,9 +174,10 @@ end
 local pass_w = 0
 local pass_h = 0
 function lovr.update(dt)
-    local spot = cursor.cursorToWorldPoint(pass_w, pass_h, cameras.topdown, input.mouse_x, input.mouse_y)
-    input.spot.x, input.spot.y, input.spot.z = spot.x, spot.y, spot.z
-
+    if track_cursor then
+        local spot = cursor.cursorToWorldPoint(pass_w, pass_h, cameras.topdown, input.mouse_x, input.mouse_y)
+        input.spot.x, input.spot.y, input.spot.z = spot.x, spot.y, spot.z
+    end
 
     UI2D.InputInfo()
 
@@ -212,24 +215,27 @@ function lovr.update(dt)
     -- Set updated world info
     for index, data in ipairs(messages) do
         if data.type == protocol.stc.update then
-            for i = 1, 22, 1 do
-                local ball = data.snapshot.balls[i]
-                if ball == nil then goto continue end
-                state.balls[i].collider:setPose(ball.x, ball.y, ball.z, ball.angle, ball.ax, ball.ay, ball.az)
-                ::continue::
-            end
-            for i = 1, 30, 1 do
-                local slot = data.snapshot.players_slots[i]
-                if slot == nil then goto continue end
-                state.players_slots[i].status = slot.status
-                local x, y, z = slot.player.pos.x, slot.player.pos.y, slot.player.pos.z
-                state.players_slots[i].player.pos.x = x
-                state.players_slots[i].player.pos.y = y
-                state.players_slots[i].player.pos.z = z
-                if i == input.id then
-                    cameras.topdown.center:set(x, y + debug_menu.camera_vertical_offset, z)
+            if input.last_received_frame == nil or input.last_received_frame < data.snapshot.frame then
+                input.last_received_frame = data.snapshot.frame
+                for i = 1, 22, 1 do
+                    local ball = data.snapshot.balls[i]
+                    if ball == nil then goto continue end
+                    state.balls[i].collider:setPose(ball.x, ball.y, ball.z, ball.angle, ball.ax, ball.ay, ball.az)
+                    ::continue::
                 end
-                ::continue::
+                for i = 1, 30, 1 do
+                    local slot = data.snapshot.players_slots[i]
+                    if slot == nil then goto continue end
+                    state.players_slots[i].status = slot.status
+                    local x, y, z = slot.player.pos.x, slot.player.pos.y, slot.player.pos.z
+                    state.players_slots[i].player.pos.x = x
+                    state.players_slots[i].player.pos.y = y
+                    state.players_slots[i].player.pos.z = z
+                    if i == input.id then
+                        cameras.topdown.center:set(x, y + debug_menu.camera_vertical_offset, z)
+                    end
+                    ::continue::
+                end
             end
         elseif data.type == protocol.stc.id then
             print("Got id", data.id)
@@ -270,7 +276,6 @@ function lovr.draw(pass)
     --#region GUI
     pass:setProjection(1, mat4():orthographic(pass:getDimensions()))
     UI2D.Begin("Settings", 0, 0)
-    UI2D.Label("Camera")
     do
         debug_menu.camera_fov_degree = UI2D.SliderFloat("fov", debug_menu.camera_fov_degree, 30, 130)
         cameras.topdown.fov = degree_to_rad(debug_menu.camera_fov_degree)
@@ -288,6 +293,15 @@ function lovr.draw(pass)
         debug_menu.camera_angle = UI2D.SliderFloat("angle", debug_menu.camera_angle, 0, 70)
         cameras.topdown.polar = degree_to_rad(debug_menu.camera_angle)
         cameras.topdown:nudge()
+    end
+    do
+        local released = false
+        debug_menu.font_size, released = UI2D.SliderFloat("font size", debug_menu.font_size, 3, 33, nil, 0)
+
+        if released then
+            print("a")
+            UI2D.SetFontSize(debug_menu.font_size)
+        end
     end
     UI2D.End(pass)
     local ui_passes = UI2D.RenderFrame(pass)
@@ -344,6 +358,9 @@ end
 
 function lovr.keyreleased(key, scancode, repeating)
     UI2D.KeyReleased()
+    if key == "g" then
+        track_cursor = not track_cursor
+    end
     if key == "f11" then
         local fullscreen, fullscreentype = lovr.window.getFullscreen()
         lovr.window.setFullscreen(not fullscreen, "exclusive")

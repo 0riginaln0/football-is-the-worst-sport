@@ -1159,7 +1159,7 @@ function UI2D.Button(name, width, height, tooltip)
 end
 
 function UI2D.SliderInt(name, v, v_min, v_max, width, tooltip)
-  return Slider(e_slider_type.int, name, v, v_min, v_max, width, tooltip)
+  return Slider(e_slider_type.int, name, v, v_min, v_max, width, nil, tooltip)
 end
 
 function UI2D.SliderFloat(name, v, v_min, v_max, width, num_decimals, tooltip)

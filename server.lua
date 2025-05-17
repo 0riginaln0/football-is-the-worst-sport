@@ -240,6 +240,7 @@ function lovr.update(dt)
         end
     end
     snapshot.players_slots = slots
+    snapshot.frame = server.frame
     sendUpdatedSnapshot(snapshot)
     table.clear(balls)
     table.clear(slots)

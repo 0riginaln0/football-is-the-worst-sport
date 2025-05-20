@@ -6,6 +6,7 @@ TODO:
 - [x] Send the spot
 - [x] Move to the spot
 - [x] Send updated player position
+- [ ] Add Player body collider and the Area collider
 - [ ] Stamina/Slowmowing/Regular/Boost
 - [ ] Jump
 - [ ] Slide

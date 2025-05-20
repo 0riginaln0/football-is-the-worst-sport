@@ -188,7 +188,7 @@ function lovr.update(dt)
 
 
     if state.host then
-        local event = state.host:service(3) -- consider to set as 0
+        local event = state.host:service(0) -- consider to set as 0
         local count, limit = 0, 50          -- Since it isn't threaded, make sure it exits update
         while event and count < limit do
             if event.type == "receive" then

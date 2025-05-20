@@ -114,7 +114,7 @@ local function handleInputEvent(msg)
 end
 
 local function handleIncomingEvents()
-    local event = server.host:service(3) -- Consider changing timeout to 0
+    local event = server.host:service(0) -- Consider changing timeout to 0
     local count, limit = 0, 50           -- Handle maximum of 50 events per frame
     while event and count < limit do
         if event.type == "receive" then
